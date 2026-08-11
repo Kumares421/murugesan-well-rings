@@ -735,6 +735,7 @@ function updateAdminUI(user) {
       customerSession = {
         email: userEmail,
         name: userName,
+        photo: user.user_metadata?.avatar_url || user.user_metadata?.picture || "",
         verified: true,
         loginTime: new Date().toISOString(),
       };
@@ -758,6 +759,7 @@ function updateAdminUI(user) {
       }
       saveCart();
       updateCustomerHeaderUI();
+      loadCustomerSessionFromCloud(userEmail);
     }
 
     // 2. Admin Portal specific permissions check (only on admin page)
@@ -864,6 +866,7 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
       customerSession = {
         email: googleEmail,
         name: googleName,
+        photo: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || "",
         verified: true,
         loginTime: new Date().toISOString(),
       };
@@ -887,6 +890,7 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
       }
       saveCart();
       updateCustomerHeaderUI();
+      loadCustomerSessionFromCloud(googleEmail);
     }
   }
 });
@@ -1599,6 +1603,68 @@ function updateCustomerHeaderUI() {
   }
 }
 
+// ============================================================
+// Supabase Cross-Device Sync for Customer Profiles & Cart
+// ============================================================
+async function syncCustomerSessionToCloud() {
+  if (!customerSession || !customerSession.email) return;
+  try {
+    const payload = {
+      email: customerSession.email.toLowerCase(),
+      name: customerSession.name || "",
+      phone: customerSession.phone || "",
+      place: customerSession.place || "",
+      photo: customerSession.photo || "",
+      cart: cart || [],
+      updated_at: new Date().toISOString(),
+    };
+    await supabaseClient
+      .from("customer_profiles")
+      .upsert(payload, { onConflict: "email" });
+  } catch (err) {
+    console.warn("Supabase profile sync notice:", err);
+  }
+}
+
+async function loadCustomerSessionFromCloud(email) {
+  if (!email) return;
+  try {
+    const { data, error } = await supabaseClient
+      .from("customer_profiles")
+      .select("*")
+      .eq("email", email.toLowerCase())
+      .maybeSingle();
+
+    if (error) {
+      console.warn("Cloud profile fetch notice:", error);
+      return;
+    }
+
+    if (data) {
+      customerSession = {
+        email: data.email,
+        name: data.name || customerSession?.name || data.email.split("@")[0],
+        phone: data.phone || customerSession?.phone || "",
+        place: data.place || customerSession?.place || "",
+        photo: data.photo || customerSession?.photo || "",
+        verified: true,
+        loginTime: new Date().toISOString(),
+      };
+      localStorage.setItem("wellrings_customer", JSON.stringify(customerSession));
+
+      if (Array.isArray(data.cart) && data.cart.length > 0) {
+        cart = data.cart;
+        localStorage.setItem("wellrings_cart", JSON.stringify(cart));
+      }
+
+      updateCustomerHeaderUI();
+      renderCartUI();
+    }
+  } catch (err) {
+    console.warn("Cloud profile sync error:", err);
+  }
+}
+
 function openCustomerAuthModal() {
   const modal = document.getElementById("customerAuthModal");
   const loginView = document.getElementById("customerLoginFormView");
@@ -1993,6 +2059,7 @@ function saveCustomerProfile(e) {
     updateCustomerHeaderUI();
     cancelEditProfile();
     openCustomerAuthModal();
+    syncCustomerSessionToCloud();
     showToast("✓ Profile details saved successfully!");
   };
 
@@ -2090,6 +2157,7 @@ function saveCart() {
   }
   updateCartBadges();
   renderCartUI();
+  syncCustomerSessionToCloud();
 }
 
 function updateCartBadges() {

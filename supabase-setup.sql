@@ -201,3 +201,26 @@ INSERT INTO slideshow (title, "desc", meta, img_url) VALUES
 -- Ensure price column exists if table was created previously
 ALTER TABLE materials ADD COLUMN IF NOT EXISTS price NUMERIC DEFAULT 500;
 
+-- 8. Customer Profiles & Cart Sync Table
+-- ============================================================
+CREATE TABLE IF NOT EXISTS customer_profiles (
+  email       TEXT PRIMARY KEY,
+  name        TEXT,
+  phone       TEXT,
+  place       TEXT,
+  photo       TEXT,
+  cart        JSONB DEFAULT '[]'::jsonb,
+  updated_at  TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE customer_profiles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public select customer_profiles" ON customer_profiles;
+DROP POLICY IF EXISTS "Public insert customer_profiles" ON customer_profiles;
+DROP POLICY IF EXISTS "Public update customer_profiles" ON customer_profiles;
+
+CREATE POLICY "Public select customer_profiles" ON customer_profiles FOR SELECT USING (true);
+CREATE POLICY "Public insert customer_profiles" ON customer_profiles FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public update customer_profiles" ON customer_profiles FOR UPDATE USING (true);
+
+
