@@ -2246,7 +2246,14 @@ function sendCartOrderWhatsApp() {
   text += `Please confirm dispatch schedule and driver contact!`;
 
   const waUrl = `https://wa.me/918838135069?text=${encodeURIComponent(text)}`;
-  window.open(waUrl, "_blank");
+  // Use anchor click instead of window.open() — works on mobile browsers (avoids popup blocker)
+  const a = document.createElement("a");
+  a.href = waUrl;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 function showToast(msg) {
