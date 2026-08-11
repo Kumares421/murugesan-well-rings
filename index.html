@@ -947,6 +947,17 @@
           </div>
         </div>
 
+        <div class="cart-customer-details-group" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px;">
+          <div class="cart-form-group">
+            <label for="cartCustomerName" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;"><i class="fas fa-user"></i> Your Name <span style="color: #ef4444;">*</span></label>
+            <input type="text" id="cartCustomerName" placeholder="Enter your full name" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 0.9rem; background: var(--bg-primary); color: var(--text-main);">
+          </div>
+          <div class="cart-form-group">
+            <label for="cartCustomerPhone" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;"><i class="fas fa-phone-alt"></i> Mobile Phone Number (10 Digits) <span style="color: #ef4444;">*</span></label>
+            <input type="tel" id="cartCustomerPhone" placeholder="e.g. 9876543210" maxlength="10" pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 0.9rem; background: var(--bg-primary); color: var(--text-main);">
+          </div>
+        </div>
+
         <div class="cart-delivery-group">
           <label for="cartDeliveryLocation"><i class="fas fa-map-marker-alt"></i> Delivery Site Address / Landmark</label>
           <input type="text" id="cartDeliveryLocation" placeholder="e.g. 67/1 Bharathiyar St, Govardanagiri, Avadi">

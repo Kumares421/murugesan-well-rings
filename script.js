@@ -2233,6 +2233,17 @@ function renderCartUI() {
   const totalPieces = cart.reduce((sum, item) => sum + item.quantity, 0);
   if (totalPiecesEl) totalPiecesEl.innerText = totalPieces + " pcs";
 
+  const cartNameInput = document.getElementById("cartCustomerName");
+  const cartPhoneInput = document.getElementById("cartCustomerPhone");
+  if (customerSession) {
+    if (cartNameInput && !cartNameInput.value && customerSession.name) {
+      cartNameInput.value = customerSession.name;
+    }
+    if (cartPhoneInput && !cartPhoneInput.value && customerSession.phone) {
+      cartPhoneInput.value = customerSession.phone;
+    }
+  }
+
   updateDeliveryCalculation();
 }
 
@@ -2293,10 +2304,36 @@ function sendCartOrderWhatsApp() {
     return;
   }
 
+  const cartNameInput = document.getElementById("cartCustomerName");
+  const cartPhoneInput = document.getElementById("cartCustomerPhone");
+
+  let custName = cartNameInput ? cartNameInput.value.trim() : "";
+  let custPhone = cartPhoneInput ? cartPhoneInput.value.trim() : "";
+
+  if (!custName && customerSession && customerSession.name) {
+    custName = customerSession.name;
+  }
+  if (!custPhone && customerSession && customerSession.phone) {
+    custPhone = customerSession.phone;
+  }
+
+  if (!custName) {
+    alert("Please enter your Full Name in the cart before sending the order.");
+    if (cartNameInput) cartNameInput.focus();
+    return;
+  }
+
+  const cleanPhone = custPhone.replace(/\D/g, "");
+  if (!cleanPhone || cleanPhone.length !== 10) {
+    alert("Please enter a valid 10-digit Mobile Phone Number (e.g. 9876543210).");
+    if (cartPhoneInput) cartPhoneInput.focus();
+    return;
+  }
+  custPhone = cleanPhone;
+
   let custEmail = customerSession
     ? customerSession.email || customerSession.phone || ""
     : "";
-  let custName = customerSession ? customerSession.name : "";
   const deliveryLoc = document.getElementById("cartDeliveryLocation")
     ? document.getElementById("cartDeliveryLocation").value.trim()
     : "";
@@ -2307,6 +2344,13 @@ function sendCartOrderWhatsApp() {
   const kmInput = document.getElementById("cartDeliveryKm");
   const deliveryKm = kmInput ? Math.max(0, parseFloat(kmInput.value) || 0) : 0;
   const deliveryCharge = Math.round(deliveryKm * deliveryRate);
+
+  // Save phone & name back to session if present
+  if (customerSession) {
+    customerSession.name = custName;
+    customerSession.phone = custPhone;
+    localStorage.setItem("wellrings_customer", JSON.stringify(customerSession));
+  }
 
   if (!custEmail) {
     const promptEmail = prompt(
@@ -2319,13 +2363,11 @@ function sendCartOrderWhatsApp() {
       return;
     }
     custEmail = promptEmail.trim().toLowerCase();
-    custName = custEmail.split("@")[0];
-    customerSession = { email: custEmail, name: custName, verified: false };
+    customerSession = { email: custEmail, name: custName, phone: custPhone, verified: false };
     localStorage.setItem("wellrings_customer", JSON.stringify(customerSession));
     updateCustomerHeaderUI();
   }
 
-  let custPhone = customerSession ? customerSession.phone || "" : "";
   let custPlace = customerSession ? customerSession.place || "" : "";
 
   let text = `📦 *MURUGESAN WELL RINGS - NEW MATERIAL ORDER*\n`;
