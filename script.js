@@ -2020,6 +2020,16 @@ function closeCartModal() {
   if (modal) modal.classList.remove("open");
 }
 
+function scrollToMaterials() {
+  closeCartModal();
+  const matEl = document.getElementById("materials");
+  if (matEl) {
+    matEl.scrollIntoView({ behavior: "smooth" });
+  } else {
+    window.location.href = "index.html#materials";
+  }
+}
+
 // Delivery Distance Calculator (per KM)
 function setDistancePreset(km) {
   const kmInput = document.getElementById("cartDeliveryKm");
@@ -2091,7 +2101,7 @@ function renderCartUI() {
           <i class="fas fa-shopping-cart" style="font-size: 2.8rem; color: var(--text-muted); opacity: 0.5; margin-bottom: 12px;"></i>
           <p style="font-weight: 600; font-size: 1.1rem; color: var(--text-main);">Your cart is empty</p>
           <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">Add well rings, covers or fencing posts to calculate estimate.</p>
-          <button class="btn btn-sm btn-primary" onclick="closeCartModal()"><i class="fas fa-plus"></i> Explore Products</button>
+          <button class="btn btn-sm btn-primary" onclick="scrollToMaterials()"><i class="fas fa-plus"></i> Explore Products</button>
         </div>
       `;
     } else {
@@ -2196,6 +2206,8 @@ function sendCartOrderWhatsApp() {
     ? document.getElementById("cartGmapLink").value.trim()
     : "";
   const deliveryRate = getDeliveryRate();
+  const kmInput = document.getElementById("cartDeliveryKm");
+  const deliveryKm = kmInput ? Math.max(0, parseFloat(kmInput.value) || 0) : 0;
   const deliveryCharge = Math.round(deliveryKm * deliveryRate);
 
   if (!custEmail) {
@@ -2246,14 +2258,9 @@ function sendCartOrderWhatsApp() {
   text += `Please confirm dispatch schedule and driver contact!`;
 
   const waUrl = `https://wa.me/918838135069?text=${encodeURIComponent(text)}`;
-  // Use anchor click instead of window.open() — works on mobile browsers (avoids popup blocker)
-  const a = document.createElement("a");
-  a.href = waUrl;
-  a.target = "_blank";
-  a.rel = "noopener noreferrer";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  
+  // Directly navigate to WhatsApp URL - launches WhatsApp app on mobile seamlessly
+  window.location.href = waUrl;
 }
 
 function showToast(msg) {
