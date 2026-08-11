@@ -1610,13 +1610,38 @@ function openCustomerAuthModal() {
     if (loginView) loginView.classList.add("hidden");
     if (otpView) otpView.classList.add("hidden");
     if (profileView) profileView.classList.remove("hidden");
+
     const nameEl = document.getElementById("loggedInCustName");
-    const emailEl =
-      document.getElementById("loggedInCustEmail") ||
-      document.getElementById("loggedInCustPhone");
+    const emailEl = document.getElementById("loggedInCustEmail");
+    const phoneEl = document.getElementById("loggedInCustPhone");
+    const placeEl = document.getElementById("loggedInCustPlace");
+    const photoEl = document.getElementById("loggedInCustPhoto");
+    const placeholderEl = document.getElementById("loggedInCustPhotoPlaceholder");
+
     if (nameEl) nameEl.innerText = customerSession.name || "Customer Account";
-    if (emailEl)
-      emailEl.innerText = customerSession.email || customerSession.phone;
+    if (emailEl) emailEl.innerText = customerSession.email || "";
+
+    if (phoneEl) {
+      phoneEl.innerHTML = customerSession.phone
+        ? `<i class="fas fa-phone-alt"></i> ${customerSession.phone}`
+        : `<i class="fas fa-phone-alt"></i> Phone not set`;
+    }
+    if (placeEl) {
+      placeEl.innerHTML = customerSession.place
+        ? `<i class="fas fa-map-marker-alt"></i> ${customerSession.place}`
+        : `<i class="fas fa-map-marker-alt"></i> Place not set`;
+    }
+
+    if (photoEl && placeholderEl) {
+      if (customerSession.photo) {
+        photoEl.src = customerSession.photo;
+        photoEl.style.display = "block";
+        placeholderEl.style.display = "none";
+      } else {
+        photoEl.style.display = "none";
+        placeholderEl.style.display = "block";
+      }
+    }
   } else {
     if (loginView) loginView.classList.remove("hidden");
     if (otpView) otpView.classList.add("hidden");
@@ -1652,83 +1677,99 @@ async function requestCustomerEmailOtp(e) {
   if (e) e.preventDefault();
   const emailInput = document.getElementById("custEmailInput");
   const nameInput = document.getElementById("custNameInput");
+  const phoneInput = document.getElementById("custPhoneInput");
+  const placeInput = document.getElementById("custPlaceInput");
+  const photoInput = document.getElementById("custPhotoInput");
 
   const email = emailInput ? emailInput.value.trim().toLowerCase() : "";
   const name = nameInput ? nameInput.value.trim() : "";
+  const phone = phoneInput ? phoneInput.value.trim() : "";
+  const place = placeInput ? placeInput.value.trim() : "";
 
   if (!email || !email.includes("@")) {
     alert("Please enter a valid Gmail / Email address.");
     return;
   }
+  if (!name) {
+    alert("Please enter your name.");
+    return;
+  }
 
   window.pendingEmail = email;
-  window.pendingName = name || email.split("@")[0];
+  window.pendingName = name;
+  window.pendingPhone = phone;
+  window.pendingPlace = place;
+  window.pendingPhoto = "";
 
-  // Generate dynamic 4-digit verification code
-  window.generatedOtp = Math.floor(
-    1000 + Math.floor(Math.random() * 9000),
-  ).toString();
+  const proceedWithOtp = () => {
+    // Generate dynamic 4-digit verification code
+    window.generatedOtp = Math.floor(
+      1000 + Math.floor(Math.random() * 9000),
+    ).toString();
 
-  // 1. Request Supabase Email OTP (sends 6-digit code after dashboard is configured)
-  try {
-    await supabaseClient.auth.signInWithOtp({
-      email: email,
-      options: { shouldCreateUser: true },
-    });
-  } catch (err) {
-    console.warn("Supabase OTP notice:", err);
-  }
-
-  // 2. Dispatch EmailJS email notification with verification code directly to Gmail
-  try {
-    if (typeof emailjs !== "undefined") {
-      const otpCode = window.generatedOtp;
-      console.log("📧 Sending OTP", otpCode, "to", email);
-      emailjs
-        .send("service_34ugknd", "template_gsaz3ad", {
-          to_name: window.pendingName,
-          from_name: "Murugesan Well Rings Verification",
-          to_email: email,
-          user_email: email,
-          recipient_email: email,
-          email: email,
-          reply_to: email,
-          phone_number: otpCode,
-          otp_code: otpCode,
-          verification_code: otpCode,
-          code: otpCode,
-          service_type: "Gmail Verification Code",
-          message_details: `Your Murugesan Well Rings Gmail Verification Code is: ${otpCode}. Please enter this 4-digit code in the app to complete verification.`,
-        })
-        .then(() => {
-          console.log("✅ OTP email sent successfully to", email);
-        })
-        .catch((e) => {
-          console.error("❌ EmailJS OTP send failed:", e);
-        });
-    } else {
-      console.error("❌ EmailJS not loaded!");
+    try {
+      supabaseClient.auth.signInWithOtp({
+        email: email,
+        options: { shouldCreateUser: true },
+      }).catch(() => {});
+    } catch (err) {
+      console.warn("Supabase OTP notice:", err);
     }
-  } catch (err) {
-    console.error("❌ EmailJS dispatch error:", err);
+
+    try {
+      if (typeof emailjs !== "undefined") {
+        const otpCode = window.generatedOtp;
+        console.log("📧 Sending OTP", otpCode, "to", email);
+        emailjs
+          .send("service_34ugknd", "template_gsaz3ad", {
+            to_name: window.pendingName,
+            from_name: "Murugesan Well Rings Verification",
+            to_email: email,
+            user_email: email,
+            recipient_email: email,
+            email: email,
+            reply_to: email,
+            phone_number: otpCode,
+            otp_code: otpCode,
+            verification_code: otpCode,
+            code: otpCode,
+            service_type: "Gmail Verification Code",
+            message_details: `Your Murugesan Well Rings Gmail Verification Code is: ${otpCode}. Please enter this 4-digit code in the app to complete verification.`,
+          })
+          .catch((e) => console.error("❌ EmailJS OTP send failed:", e));
+      }
+    } catch (err) {
+      console.error("❌ EmailJS dispatch error:", err);
+    }
+
+    const otpSubtitle = document.getElementById("otpPhoneSubtitle");
+    const loginView = document.getElementById("customerLoginFormView");
+    const otpView = document.getElementById("customerOtpFormView");
+    const otpInput = document.getElementById("custOtpInput");
+
+    if (otpSubtitle)
+      otpSubtitle.innerText = `Enter the 4-digit verification code sent to ${email}`;
+    if (otpInput) otpInput.value = "";
+
+    if (loginView) loginView.classList.add("hidden");
+    if (otpView) otpView.classList.remove("hidden");
+
+    startOtpTimer();
+    showToast(
+      `📩 4-Digit Verification Code sent to ${email}! Check your Gmail.`,
+    );
+  };
+
+  if (photoInput && photoInput.files && photoInput.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function (evt) {
+      window.pendingPhoto = evt.target.result;
+      proceedWithOtp();
+    };
+    reader.readAsDataURL(photoInput.files[0]);
+  } else {
+    proceedWithOtp();
   }
-
-  const otpSubtitle = document.getElementById("otpPhoneSubtitle");
-  const loginView = document.getElementById("customerLoginFormView");
-  const otpView = document.getElementById("customerOtpFormView");
-  const otpInput = document.getElementById("custOtpInput");
-
-  if (otpSubtitle)
-    otpSubtitle.innerText = `Enter the 4-digit verification code sent to ${email}`;
-  if (otpInput) otpInput.value = ""; // Input box remains empty; user reads code from Gmail inbox
-
-  if (loginView) loginView.classList.add("hidden");
-  if (otpView) otpView.classList.remove("hidden");
-
-  startOtpTimer();
-  showToast(
-    `📩 4-Digit Verification Code sent to ${email}! Please check your Gmail inbox.`,
-  );
 }
 
 function startOtpTimer() {
@@ -1806,7 +1847,6 @@ async function verifyCustomerEmailOtp(e) {
 
   let isOtpValid = false;
 
-  // Validate against the generated OTP only
   if (enteredOtp.length === 4 && window.pendingEmail && window.generatedOtp) {
     if (enteredOtp === window.generatedOtp) {
       isOtpValid = true;
@@ -1823,13 +1863,16 @@ async function verifyCustomerEmailOtp(e) {
   customerSession = {
     email: window.pendingEmail,
     name: window.pendingName,
+    phone: window.pendingPhone || "",
+    place: window.pendingPlace || "",
+    photo: window.pendingPhoto || "",
     verified: true,
     loginTime: new Date().toISOString(),
   };
 
   localStorage.setItem("wellrings_customer", JSON.stringify(customerSession));
 
-  // Restore old saved cart data for this email!
+  // Restore old saved cart data for this email
   const savedUserCartStr = localStorage.getItem(
     "wellrings_cart_" + customerSession.email,
   );
@@ -1868,16 +1911,11 @@ async function verifyCustomerEmailOtp(e) {
   if (otpView) otpView.classList.add("hidden");
   if (profileView) profileView.classList.remove("hidden");
 
-  const nameEl = document.getElementById("loggedInCustName");
-  const emailEl =
-    document.getElementById("loggedInCustEmail") ||
-    document.getElementById("loggedInCustPhone");
-  if (nameEl) nameEl.innerText = customerSession.name;
-  if (emailEl) emailEl.innerText = customerSession.email;
+  openCustomerAuthModal();
 
   renderCartUI();
   showToast(
-    `✓ Gmail ${customerSession.email} verified! Previous cart data restored.`,
+    `✓ Account verified for ${customerSession.name}!`,
   );
 }
 
@@ -2227,10 +2265,15 @@ function sendCartOrderWhatsApp() {
     updateCustomerHeaderUI();
   }
 
+  let custPhone = customerSession ? customerSession.phone || "" : "";
+  let custPlace = customerSession ? customerSession.place || "" : "";
+
   let text = `📦 *MURUGESAN WELL RINGS - NEW MATERIAL ORDER*\n`;
   text += `--------------------------------\n`;
   text += `📧 *Customer Gmail:* ${custEmail} ${customerSession && customerSession.verified ? "(✓ Verified)" : ""}\n`;
   if (custName) text += `👤 *Customer Name:* ${custName}\n`;
+  if (custPhone) text += `📱 *Phone Number:* ${custPhone}\n`;
+  if (custPlace) text += `🏡 *Customer Place:* ${custPlace}\n`;
   if (deliveryLoc) text += `📍 *Delivery Address:* ${deliveryLoc}\n`;
   if (gmapLink) text += `🗺️ *Google Maps Location:* ${gmapLink}\n`;
   text += `🚚 *Delivery Distance:* ${deliveryKm} km from Avadi Yard\n`;

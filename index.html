@@ -781,15 +781,27 @@
 
         <form id="customerLoginForm" onsubmit="requestCustomerEmailOtp(event)">
           <div class="form-group">
-            <label for="custEmailInput">Gmail / Email Address</label>
+            <label for="custEmailInput">Gmail / Email Address <span style="color: #ef4444;">*</span></label>
             <div class="phone-input-group">
               <span class="country-code" style="color: var(--primary-teal); font-size: 1.1rem;"><i class="fas fa-envelope"></i></span>
               <input type="email" id="custEmailInput" placeholder="example@gmail.com" required style="width: 100%; font-size: 0.95rem;">
             </div>
           </div>
           <div class="form-group">
-            <label for="custNameInput">Your Name (Optional)</label>
-            <input type="text" id="custNameInput" placeholder="Enter your name">
+            <label for="custNameInput">Your Name <span style="color: #ef4444;">*</span></label>
+            <input type="text" id="custNameInput" placeholder="Enter your full name" required>
+          </div>
+          <div class="form-group">
+            <label for="custPhoneInput">Phone Number</label>
+            <input type="tel" id="custPhoneInput" placeholder="+91 98765 43210">
+          </div>
+          <div class="form-group">
+            <label for="custPlaceInput">Place / City / Area</label>
+            <input type="text" id="custPlaceInput" placeholder="e.g. Avadi, Chennai">
+          </div>
+          <div class="form-group">
+            <label for="custPhotoInput">Profile Photo (Optional)</label>
+            <input type="file" id="custPhotoInput" accept="image/*" style="font-size: 0.85rem;">
           </div>
           <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-paper-plane"></i> Send Verification Code to Gmail</button>
         </form>
@@ -815,19 +827,26 @@
           </div>
 
           <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-check-circle"></i> Verify Code & Login</button>
-          <button type="button" class="btn btn-outline btn-block btn-sm margin-top-sm" onclick="backToEmailInput()"><i class="fas fa-arrow-left"></i> Change Gmail Address</button>
+          <button type="button" class="btn btn-outline btn-block btn-sm margin-top-sm" onclick="backToEmailInput()"><i class="fas fa-arrow-left"></i> Change Details</button>
         </form>
       </div>
 
       <!-- Step 3: Verified Customer Profile View -->
       <div id="customerProfileView" class="hidden">
         <div class="modal-header">
-          <div class="modal-icon-badge user-active"><i class="fas fa-user-check"></i></div>
+          <div id="custProfileAvatarContainer" style="margin: 0 auto 12px auto; width: 70px; height: 70px; border-radius: 50%; overflow: hidden; background: rgba(34, 197, 94, 0.15); display: flex; align-items: center; justify-content: center; border: 2px solid var(--primary-teal);">
+            <img id="loggedInCustPhoto" src="" alt="Profile Photo" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+            <i id="loggedInCustPhotoPlaceholder" class="fas fa-user-circle" style="font-size: 2.2rem; color: var(--primary-teal);"></i>
+          </div>
           <h3 id="loggedInCustName">Logged In Customer</h3>
           <p id="loggedInCustEmail" class="highlight-phone" style="word-break: break-all;">name@gmail.com</p>
-          <span class="verified-badge"><i class="fas fa-check-circle"></i> Verified Gmail Account</span>
+          <div style="font-size: 0.88rem; color: var(--text-muted); margin-top: 8px; display: flex; flex-direction: column; gap: 4px; align-items: center;">
+            <span id="loggedInCustPhone"><i class="fas fa-phone-alt"></i> Phone not set</span>
+            <span id="loggedInCustPlace"><i class="fas fa-map-marker-alt"></i> Place not set</span>
+          </div>
+          <span class="verified-badge" style="margin-top: 10px; display: inline-block;"><i class="fas fa-check-circle"></i> Verified Account</span>
         </div>
-        <div class="profile-actions">
+        <div class="profile-actions" style="margin-top: 16px;">
           <button class="btn btn-secondary btn-block" onclick="closeCustomerAuthModal(); openCartModal();"><i class="fas fa-shopping-cart"></i> View My Cart</button>
           <button class="btn btn-outline btn-block danger-text" onclick="handleCustomerLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
