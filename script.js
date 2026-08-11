@@ -1604,7 +1604,10 @@ function openCustomerAuthModal() {
   const loginView = document.getElementById("customerLoginFormView");
   const otpView = document.getElementById("customerOtpFormView");
   const profileView = document.getElementById("customerProfileView");
+  const editView = document.getElementById("customerEditProfileView");
   if (!modal) return;
+
+  if (editView) editView.classList.add("hidden");
 
   if (customerSession && (customerSession.email || customerSession.phone)) {
     if (loginView) loginView.classList.add("hidden");
@@ -1945,6 +1948,63 @@ function handleCustomerLogout() {
   closeCustomerAuthModal();
   renderCartUI();
   showToast("Logged out. Cart saved for your account and cleared for session.");
+}
+
+function toggleEditProfileForm() {
+  const profileView = document.getElementById("customerProfileView");
+  const editView = document.getElementById("customerEditProfileView");
+  if (!customerSession) return;
+
+  const nameInput = document.getElementById("editCustName");
+  const phoneInput = document.getElementById("editCustPhone");
+  const placeInput = document.getElementById("editCustPlace");
+
+  if (nameInput) nameInput.value = customerSession.name || "";
+  if (phoneInput) phoneInput.value = customerSession.phone || "";
+  if (placeInput) placeInput.value = customerSession.place || "";
+
+  if (profileView) profileView.classList.add("hidden");
+  if (editView) editView.classList.remove("hidden");
+}
+
+function cancelEditProfile() {
+  const profileView = document.getElementById("customerProfileView");
+  const editView = document.getElementById("customerEditProfileView");
+  if (editView) editView.classList.add("hidden");
+  if (profileView) profileView.classList.remove("hidden");
+}
+
+function saveCustomerProfile(e) {
+  if (e) e.preventDefault();
+  if (!customerSession) return;
+
+  const nameVal = document.getElementById("editCustName").value.trim();
+  const phoneVal = document.getElementById("editCustPhone").value.trim();
+  const placeVal = document.getElementById("editCustPlace").value.trim();
+  const photoInput = document.getElementById("editCustPhoto");
+
+  const saveDetails = (photoData) => {
+    customerSession.name = nameVal || customerSession.name;
+    customerSession.phone = phoneVal;
+    customerSession.place = placeVal;
+    if (photoData) customerSession.photo = photoData;
+
+    localStorage.setItem("wellrings_customer", JSON.stringify(customerSession));
+    updateCustomerHeaderUI();
+    cancelEditProfile();
+    openCustomerAuthModal();
+    showToast("✓ Profile details saved successfully!");
+  };
+
+  if (photoInput && photoInput.files && photoInput.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function (evt) {
+      saveDetails(evt.target.result);
+    };
+    reader.readAsDataURL(photoInput.files[0]);
+  } else {
+    saveDetails(null);
+  }
 }
 
 // Card Quantity Controller

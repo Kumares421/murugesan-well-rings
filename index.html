@@ -846,10 +846,40 @@
           </div>
           <span class="verified-badge" style="margin-top: 10px; display: inline-block;"><i class="fas fa-check-circle"></i> Verified Account</span>
         </div>
-        <div class="profile-actions" style="margin-top: 16px;">
+        <div class="profile-actions" style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
+          <button class="btn btn-primary btn-block" onclick="toggleEditProfileForm()"><i class="fas fa-user-edit"></i> Edit Profile (Name, Phone, Place, Photo)</button>
           <button class="btn btn-secondary btn-block" onclick="closeCustomerAuthModal(); openCartModal();"><i class="fas fa-shopping-cart"></i> View My Cart</button>
           <button class="btn btn-outline btn-block danger-text" onclick="handleCustomerLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
+      </div>
+
+      <!-- Step 4: Edit Profile Form View -->
+      <div id="customerEditProfileView" class="hidden">
+        <div class="modal-header">
+          <div class="modal-icon-badge" style="background: rgba(14, 165, 233, 0.15); color: var(--primary-teal);"><i class="fas fa-user-edit"></i></div>
+          <h3>Update Profile Details</h3>
+          <p>Add your phone number, place, or update photo for orders.</p>
+        </div>
+        <form id="customerEditProfileForm" onsubmit="saveCustomerProfile(event)">
+          <div class="form-group">
+            <label for="editCustName">Your Full Name <span style="color: #ef4444;">*</span></label>
+            <input type="text" id="editCustName" placeholder="Enter your name" required>
+          </div>
+          <div class="form-group">
+            <label for="editCustPhone">Phone Number</label>
+            <input type="tel" id="editCustPhone" placeholder="+91 98765 43210">
+          </div>
+          <div class="form-group">
+            <label for="editCustPlace">Place / City / Area</label>
+            <input type="text" id="editCustPlace" placeholder="e.g. Avadi, Chennai">
+          </div>
+          <div class="form-group">
+            <label for="editCustPhoto">Change Profile Photo (Optional)</label>
+            <input type="file" id="editCustPhoto" accept="image/*" style="font-size: 0.85rem;">
+          </div>
+          <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-save"></i> Save Profile</button>
+          <button type="button" class="btn btn-outline btn-block btn-sm margin-top-sm" onclick="cancelEditProfile()"><i class="fas fa-arrow-left"></i> Cancel</button>
+        </form>
       </div>
     </div>
   </div>
