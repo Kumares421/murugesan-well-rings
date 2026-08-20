@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://murugesanwellrings.com/sitemap.xml
+Sitemap: https://murugesan-well-rings.vercel.app/sitemap.xml
