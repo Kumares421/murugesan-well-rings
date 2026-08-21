@@ -27,17 +27,20 @@
   <meta name="twitter:description" content="Reinforced concrete well rings and manual well digging experts in Avadi, Chennai.">
   <meta name="twitter:image" content="https://murugesanwellrings.com/logo.png">
 
-  <!-- Google Fonts & FontAwesome -->
+  <!-- Google Fonts — non-blocking via media=print trick -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet"></noscript>
 
-  <!-- EmailJS integration -->
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <!-- Font Awesome — non-blocking -->
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
 
-  <!-- Supabase JS SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- LCP image preload — hero slideshow first slide loads before body renders -->
+  <link rel="preload" as="image" href="slide1.webp">
 
   <!-- Schema.org JSON-LD Structured Data for Google Local Search -->
   <script type="application/ld+json">
@@ -147,7 +150,7 @@
   }
   </script>
 
-  <link rel="stylesheet" href="style.css?v=13">
+  <link rel="stylesheet" href="style.css?v=14">
 </head>
 
 <body>
@@ -157,7 +160,7 @@
     <div class="container welcome-container">
       <span><span class="badge">New</span> Welcome to Murugesan Well Rings! Direct from manufacturer. Ring supply &
         manual digging services.</span>
-      <button class="close-welcome-btn" onclick="dismissWelcomeBar()"><i class="fas fa-times"></i></button>
+      <button class="close-welcome-btn" onclick="dismissWelcomeBar()" aria-label="Dismiss announcement"><i class="fas fa-times"></i></button>
     </div>
   </div>
 
@@ -165,7 +168,7 @@
   <header class="header">
     <div class="container nav-container">
       <a href="#home" class="logo-area">
-        <img src="logo.png" alt="Murugesan Well Rings Logo" class="site-logo">
+        <img src="logo.png" alt="Murugesan Well Rings Logo" class="site-logo" width="48" height="48" fetchpriority="high">
         <span class="logo-text">Murugesan<span class="highlight">WellRings</span></span>
       </a>
 
@@ -185,7 +188,7 @@
           <span id="customerAuthText" class="auth-btn-text">Login</span>
         </button>
 
-        <button id="cartToggleBtn" class="cart-toggle-btn" onclick="openCartModal()" title="View Cart">
+        <button id="cartToggleBtn" class="cart-toggle-btn" onclick="openCartModal()" title="View Cart" aria-label="View Cart">
           <i class="fas fa-shopping-cart"></i>
           <span id="cartBadge" class="cart-badge">0</span>
         </button>
@@ -197,6 +200,8 @@
     </div>
   </header>
   <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+
+  <main id="main-content">
 
   <!-- Hero Section -->
   <section id="home" class="hero-section">
@@ -231,11 +236,15 @@
         </div>
       </div>
       <div class="hero-badge-container">
-        <!-- Auto-sliding Photo Carousel -->
+        <!-- Auto-sliding Photo Carousel — real WebP images for fast LCP -->
         <div class="hero-slideshow" id="heroSlideshow">
           <div class="slideshow-track" id="slideshowTrack">
-            <div id="slide-3d-ring" class="slideshow-img active" style="background:#0f172a; overflow:hidden;"></div>
-            <div id="slide-3d-post" class="slideshow-img" style="background:#0f172a; overflow:hidden;"></div>
+            <div class="slideshow-img active">
+              <img id="heroLcpImage" src="slide1.webp" alt="Murugesan Well Rings - RCC Concrete Well Ring" fetchpriority="high" width="560" height="420" style="width:100%;height:100%;object-fit:cover;display:block;">
+            </div>
+            <div class="slideshow-img">
+              <img src="slide2.webp" alt="Murugesan Well Rings - Concrete Fencing Post" loading="lazy" width="560" height="420" style="width:100%;height:100%;object-fit:cover;display:block;">
+            </div>
           </div>
           <div class="slideshow-dots" id="slideshowDots">
             <span class="dot active" data-index="0"></span>
@@ -275,21 +284,21 @@
         <div class="highlight-box">
           <i class="fas fa-water"></i>
           <div>
-            <h4>Fresh Groundwater (10–20 ft)</h4>
+            <h3>Fresh Groundwater (10–20 ft)</h3>
             <p>Extracts clean, fresh water at optimal shallow depths without hitting deep salt water layers.</p>
           </div>
         </div>
         <div class="highlight-box">
           <i class="fas fa-cloud-rain"></i>
           <div>
-            <h4>Rainwater Harvesting Sump</h4>
+            <h3>Rainwater Harvesting Sump</h3>
             <p>Directs roof rainwater into underground concrete well rings for storage and garden usage.</p>
           </div>
         </div>
         <div class="highlight-box">
           <i class="fas fa-filter"></i>
           <div>
-            <h4>Multi-Stage Aquifer Filter</h4>
+            <h3>Multi-Stage Aquifer Filter</h3>
             <p>Filter tanks naturally recharge clean rainwater directly back into underground soil aquifers.</p>
           </div>
         </div>
@@ -299,7 +308,7 @@
       <div class="about-unified-grid">
         <!-- Left Column: System Diagram Image -->
         <div class="diagram-img-container" onclick="openDiagramModal()">
-          <img src="about-bg.jpg" alt="Murugesan Well Rings System Diagram - Rainwater Harvesting & Groundwater Recharge" class="diagram-img">
+          <img src="about-bg.webp" alt="Murugesan Well Rings System Diagram - Rainwater Harvesting & Groundwater Recharge" class="diagram-img" width="800" height="600" loading="lazy">
           <div class="diagram-overlay-hint">
             <i class="fas fa-search-plus"></i> Tap to view full diagram
           </div>
@@ -344,12 +353,12 @@
 
       <!-- Materials Slider Container with navigation arrows -->
       <div class="slider-outer-container">
-        <button class="slider-arrow arrow-left" onclick="scrollGrid('materialsGrid', 'left')"><i
+        <button class="slider-arrow arrow-left" onclick="scrollGrid('materialsGrid', 'left')" aria-label="Scroll left"><i
             class="fas fa-chevron-left"></i></button>
         <div class="materials-grid" id="materialsGrid">
           <!-- Dynamically populated by script.js -->
         </div>
-        <button class="slider-arrow arrow-right" onclick="scrollGrid('materialsGrid', 'right')"><i
+        <button class="slider-arrow arrow-right" onclick="scrollGrid('materialsGrid', 'right')" aria-label="Scroll right"><i
             class="fas fa-chevron-right"></i></button>
       </div>
     </div>
@@ -366,12 +375,12 @@
 
       <!-- Projects Slider Container with navigation arrows -->
       <div class="slider-outer-container">
-        <button class="slider-arrow arrow-left" onclick="scrollGrid('projectsGrid', 'left')"><i
+        <button class="slider-arrow arrow-left" onclick="scrollGrid('projectsGrid', 'left')" aria-label="Scroll left"><i
             class="fas fa-chevron-left"></i></button>
         <div class="projects-grid" id="projectsGrid">
           <!-- Dynamically populated by script.js -->
         </div>
-        <button class="slider-arrow arrow-right" onclick="scrollGrid('projectsGrid', 'right')"><i
+        <button class="slider-arrow arrow-right" onclick="scrollGrid('projectsGrid', 'right')" aria-label="Scroll right"><i
             class="fas fa-chevron-right"></i></button>
       </div>
     </div>
@@ -388,12 +397,12 @@
 
       <!-- Services Slider Container with navigation arrows -->
       <div class="slider-outer-container">
-        <button class="slider-arrow arrow-left" onclick="scrollGrid('servicesGrid', 'left')"><i
+        <button class="slider-arrow arrow-left" onclick="scrollGrid('servicesGrid', 'left')" aria-label="Scroll left"><i
             class="fas fa-chevron-left"></i></button>
         <div class="services-grid" id="servicesGrid">
           <!-- Dynamically populated by script.js -->
         </div>
-        <button class="slider-arrow arrow-right" onclick="scrollGrid('servicesGrid', 'right')"><i
+        <button class="slider-arrow arrow-right" onclick="scrollGrid('servicesGrid', 'right')" aria-label="Scroll right"><i
             class="fas fa-chevron-right"></i></button>
       </div>
     </div>
@@ -444,6 +453,7 @@
           <iframe
             src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d15544.737611676801!2d80.1100475!3d13.0874968!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a5263f75ea4140d%3A0x3a5100189489425f!2sMurugesan%20Well%20Rings!5e0!3m2!1sen!2sin!4v1781805192028!5m2!1sen!2sin"
             width="100%" height="100%" style="border:0; flex-grow: 1; border-radius: 8px;" allowfullscreen=""
+            title="Google Maps Location of Murugesan Well Rings in Avadi, Chennai"
             loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
 
@@ -486,14 +496,16 @@
     </div>
   </section>
 
-  </footer>
+  </main>
+
+  <footer class="footer">
     <div class="container footer-container">
       <div class="footer-brand">
         <span class="logo-text">Murugesan<span class="highlight">WellRings</span></span>
         <p>Your premium supplier of reinforced concrete well rings and expert manual digging operations in Chennai.</p>
       </div>
       <div class="footer-links">
-        <h4>Quick Links</h4>
+        <h3>Quick Links</h3>
         <a href="#home">Home</a>
         <a href="#about">About</a>
         <a href="#materials">Materials</a>
@@ -501,7 +513,7 @@
         <a href="#services">Services</a>
       </div>
       <div class="footer-contacts">
-        <h4>Contact Numbers</h4>
+        <h3>Contact Numbers</h3>
         <p><i class="fas fa-phone"></i> +91 99415 95850</p>
         <p><i class="fas fa-phone"></i> +91 98405 04732</p>
         <p><i class="fas fa-phone"></i> +91 88381 35069</p>
@@ -547,222 +559,24 @@
     </a>
   </div>
 
-  <!-- Three.js Libraries -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <script>
-  // ============================================================
-  // Interactive 3D Slideshow Controllers
-  // ============================================================
-  (function() {
-    // --- Slide 1: Well Ring ---
-    const container1 = document.getElementById('slide-3d-ring');
-    if (!container1) return;
-
-    const scene1 = new THREE.Scene();
-    scene1.background = new THREE.Color('#0f172a');
-    
-    const camera1 = new THREE.PerspectiveCamera(45, container1.offsetWidth / container1.offsetHeight, 1, 1000);
-    camera1.position.set(22, 16, 22);
-
-    const renderer1 = new THREE.WebGLRenderer({ antialias: true });
-    renderer1.setPixelRatio(window.devicePixelRatio);
-    renderer1.setSize(container1.offsetWidth, container1.offsetHeight);
-    renderer1.shadowMap.enabled = true;
-    container1.appendChild(renderer1.domElement);
-
-    const controls1 = new THREE.OrbitControls(camera1, renderer1.domElement);
-    controls1.enableDamping = true;
-    controls1.dampingFactor = 0.05;
-    controls1.autoRotate = true;
-    controls1.autoRotateSpeed = 1.5;
-    controls1.enablePan = false;
-
-    // Lighting
-    scene1.add(new THREE.AmbientLight(0xffffff, 0.55));
-    const dirL1 = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirL1.position.set(20, 40, 20);
-    dirL1.castShadow = true;
-    scene1.add(dirL1);
-    const pointL1 = new THREE.PointLight(0x0d9488, 1.2, 100);
-    pointL1.position.set(0, 15, 15);
-    scene1.add(pointL1);
-
-    // Floor and Grid
-    const floorGeo1 = new THREE.PlaneGeometry(200, 200);
-    const floorMat1 = new THREE.MeshStandardMaterial({ color: '#090d16', roughness: 0.9 });
-    const floor1 = new THREE.Mesh(floorGeo1, floorMat1);
-    floor1.rotation.x = -Math.PI / 2;
-    floor1.position.y = -5.5;
-    floor1.receiveShadow = true;
-    scene1.add(floor1);
-    const grid1 = new THREE.GridHelper(50, 10, 0x0d9488, 0x1e293b);
-    grid1.position.y = -5.4;
-    scene1.add(grid1);
-
-    // Well Ring Mesh
-    const RING_H = 11, RING_T = 1.5;
-    const outerR = 9, innerR = 7.5;
-    const pts = [
-      new THREE.Vector2(innerR, -RING_H / 2),
-      new THREE.Vector2(outerR, -RING_H / 2),
-      new THREE.Vector2(outerR,  RING_H / 2),
-      new THREE.Vector2(innerR,  RING_H / 2),
-      new THREE.Vector2(innerR, -RING_H / 2)
-    ];
-    const latheGeo = new THREE.LatheGeometry(pts, 64);
-    
-    // Texture generator
-    const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#a1a1aa'; ctx.fillRect(0, 0, 256, 256);
-    for (let i = 0; i < 8000; i++) {
-      const s = 100 + Math.random() * 80;
-      ctx.fillStyle = `rgba(${s},${s},${s},0.5)`;
-      ctx.fillRect(Math.random() * 256, Math.random() * 256, 1.5, 1.5);
-    }
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(1, 2);
-
-    const ringMat = new THREE.MeshStandardMaterial({
-      color: 0xcccccc,
-      map: tex,
-      roughness: 0.9,
-      metalness: 0.1
-    });
-    const ring = new THREE.Mesh(latheGeo, ringMat);
-    ring.castShadow = ring.receiveShadow = true;
-    scene1.add(ring);
-
-    // Numrods
-    const nGeo = new THREE.TorusGeometry(innerR + RING_T/2, 0.2, 16, 50);
-    const nMat = new THREE.MeshStandardMaterial({ color: 0x71717a, metalness: 0.9, roughness: 0.2 });
-    [-3, 3].forEach(y => {
-      const rod = new THREE.Mesh(nGeo, nMat);
-      rod.rotation.x = Math.PI / 2;
-      rod.position.y = y;
-      scene1.add(rod);
-    });
-
-    controls1.target.set(0, 0, 0);
-    controls1.update();
 
 
-    // --- Slide 2: Fencing Post ---
-    const container2 = document.getElementById('slide-3d-post');
-    if (!container2) return;
+  <!-- EmailJS — deferred, not render-critical -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
-    const scene2 = new THREE.Scene();
-    scene2.background = new THREE.Color('#0f172a');
-
-    const camera2 = new THREE.PerspectiveCamera(45, container2.offsetWidth / container2.offsetHeight, 1, 1000);
-    camera2.position.set(28, 18, 28);
-
-    const renderer2 = new THREE.WebGLRenderer({ antialias: true });
-    renderer2.setPixelRatio(window.devicePixelRatio);
-    renderer2.setSize(container2.offsetWidth, container2.offsetHeight);
-    renderer2.shadowMap.enabled = true;
-    container2.appendChild(renderer2.domElement);
-
-    const controls2 = new THREE.OrbitControls(camera2, renderer2.domElement);
-    controls2.enableDamping = true;
-    controls2.dampingFactor = 0.05;
-    controls2.autoRotate = true;
-    controls2.autoRotateSpeed = 1.5;
-    controls2.enablePan = false;
-
-    // Lighting
-    scene2.add(new THREE.AmbientLight(0xffffff, 0.55));
-    const dirL2 = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirL2.position.set(20, 40, 20);
-    dirL2.castShadow = true;
-    scene2.add(dirL2);
-    const pointL2 = new THREE.PointLight(0x10b981, 1.2, 100);
-    pointL2.position.set(0, 15, 15);
-    scene2.add(pointL2);
-
-    // Floor and Grid
-    const floorGeo2 = new THREE.PlaneGeometry(200, 200);
-    const floorMat2 = new THREE.MeshStandardMaterial({ color: '#090d16', roughness: 0.9 });
-    const floor2 = new THREE.Mesh(floorGeo2, floorMat2);
-    floor2.rotation.x = -Math.PI / 2;
-    floor2.position.y = -8;
-    floor2.receiveShadow = true;
-    scene2.add(floor2);
-    const grid2 = new THREE.GridHelper(50, 10, 0x10b981, 0x1e293b);
-    grid2.position.y = -7.9;
-    scene2.add(grid2);
-
-    // Fencing Post
-    const postGeo = new THREE.BoxGeometry(2, 18, 2);
-    const postMat = new THREE.MeshStandardMaterial({
-      color: 0xcccccc,
-      map: tex,
-      roughness: 0.9,
-      metalness: 0.1
-    });
-    const post = new THREE.Mesh(postGeo, postMat);
-    post.castShadow = post.receiveShadow = true;
-    post.rotation.z = Math.PI / 2.3;
-    post.rotation.y = Math.PI / 6;
-    scene2.add(post);
-
-    // Reinforcing Rods
-    const rodGeo = new THREE.CylinderGeometry(0.12, 0.12, 17, 8);
-    const rodMat = new THREE.MeshStandardMaterial({ color: 0x52525b, metalness: 0.9, roughness: 0.2 });
-    [-0.5, 0.5].forEach(x => {
-      const rod = new THREE.Mesh(rodGeo, rodMat);
-      rod.position.set(x, 0, 0);
-      rod.rotation.z = Math.PI / 2.3;
-      rod.rotation.y = Math.PI / 6;
-      scene2.add(rod);
-    });
-
-    controls2.target.set(0, 0, 0);
-    controls2.update();
-
-
-    // --- Render Loop ---
-    function animate() {
-      requestAnimationFrame(animate);
-      if (container1.classList.contains('active')) {
-        controls1.update();
-        renderer1.render(scene1, camera1);
-      }
-      if (container2.classList.contains('active')) {
-        controls2.update();
-        renderer2.render(scene2, camera2);
-      }
-    }
-    animate();
-
-    // --- Resize ---
-    window.addEventListener('resize', () => {
-      [renderer1, renderer2].forEach((r, idx) => {
-        if (!r) return;
-        const parent = r.domElement.parentElement;
-        const w = parent.offsetWidth;
-        const h = parent.offsetHeight;
-        const cam = idx === 0 ? camera1 : camera2;
-        cam.aspect = w / h;
-        cam.updateProjectionMatrix();
-        r.setSize(w, h);
-      });
-    });
-  })();
-  </script>
+  <!-- Supabase JS SDK — deferred, not render-critical -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- High-Res System Diagram Modal -->
   <div id="diagramModal" class="diagram-modal" onclick="closeDiagramModal()">
     <span class="close-modal-btn" onclick="closeDiagramModal()">&times;</span>
-    <img src="about-bg.jpg" alt="Murugesan Well Rings System Diagram - Full View" class="diagram-modal-content" onclick="event.stopPropagation()">
+    <img src="about-bg.jpg" alt="Murugesan Well Rings System Diagram - Full View" class="diagram-modal-content" width="1000" height="750" loading="lazy" onclick="event.stopPropagation()">
   </div>
 
   <!-- Customer Mobile Auth Modal -->
   <div id="customerAuthModal" class="custom-modal-overlay" onclick="closeCustomerAuthModal()">
     <div class="custom-modal-content glass-card" onclick="event.stopPropagation()">
-      <button class="modal-close-btn" onclick="closeCustomerAuthModal()">&times;</button>
+      <button class="modal-close-btn" onclick="closeCustomerAuthModal()" aria-label="Close modal">&times;</button>
       
       <!-- Step 1: Gmail Input & Google Sign In -->
       <div id="customerLoginFormView">
@@ -824,7 +638,7 @@
 
           <div class="otp-timer-row">
             <span id="otpTimerText">Resend code in <strong id="otpCountdownSec">30</strong>s</span>
-            <button type="button" id="resendOtpBtn" class="btn-text-sm" disabled onclick="resendCustomerEmailOtp()"><i class="fas fa-sync-alt"></i> Resend Code</button>
+            <button type="button" id="resendOtpBtn" class="btn-text-sm" disabled onclick="resendCustomerEmailOtp()" aria-label="Resend verification code"><i class="fas fa-sync-alt"></i> Resend Code</button>
           </div>
 
           <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-check-circle"></i> Verify Code & Login</button>
@@ -836,7 +650,7 @@
       <div id="customerProfileView" class="hidden">
         <div class="modal-header">
           <div id="custProfileAvatarContainer" style="margin: 0 auto 12px auto; width: 70px; height: 70px; border-radius: 50%; overflow: hidden; background: rgba(34, 197, 94, 0.15); display: flex; align-items: center; justify-content: center; border: 2px solid var(--primary-teal);">
-            <img id="loggedInCustPhoto" src="" alt="Profile Photo" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+            <img id="loggedInCustPhoto" src="" alt="Profile Photo" width="70" height="70" style="width: 100%; height: 100%; object-fit: cover; display: none;">
             <i id="loggedInCustPhotoPlaceholder" class="fas fa-user-circle" style="font-size: 2.2rem; color: var(--primary-teal);"></i>
           </div>
           <h3 id="loggedInCustName">Logged In Customer</h3>
@@ -894,7 +708,7 @@
           <h3>Material Cart</h3>
           <span id="cartHeaderCount" class="cart-count-pill">0 Items</span>
         </div>
-        <button class="modal-close-btn" onclick="closeCartModal()">&times;</button>
+        <button class="modal-close-btn" onclick="closeCartModal()" aria-label="Close modal">&times;</button>
       </div>
 
       <!-- Customer Status Bar inside Cart -->
@@ -921,10 +735,10 @@
               <span class="km-unit">km</span>
             </div>
             <div class="distance-presets">
-              <button type="button" class="preset-btn" onclick="setDistancePreset(5)">5 km</button>
-              <button type="button" class="preset-btn" onclick="setDistancePreset(10)">10 km</button>
-              <button type="button" class="preset-btn" onclick="setDistancePreset(15)">15 km</button>
-              <button type="button" class="preset-btn" onclick="setDistancePreset(25)">25 km</button>
+              <button type="button" class="preset-btn" onclick="setDistancePreset(5)" aria-label="Set delivery distance to 5 km">5 km</button>
+              <button type="button" class="preset-btn" onclick="setDistancePreset(10)" aria-label="Set delivery distance to 10 km">10 km</button>
+              <button type="button" class="preset-btn" onclick="setDistancePreset(15)" aria-label="Set delivery distance to 15 km">15 km</button>
+              <button type="button" class="preset-btn" onclick="setDistancePreset(25)" aria-label="Set delivery distance to 25 km">25 km</button>
             </div>
           </div>
         </div>
@@ -968,7 +782,7 @@
           <label for="cartGmapLink"><i class="fas fa-map-marked-alt"></i> Google Maps Pin / Location URL</label>
           <div class="gmap-input-row">
             <input type="text" id="cartGmapLink" placeholder="Paste Google Maps URL or tap Use GPS button">
-            <button type="button" class="btn btn-sm btn-secondary gps-btn" onclick="fetchCurrentGpsLocation()" title="Detect My Current GPS Location">
+            <button type="button" class="btn btn-sm btn-secondary gps-btn" onclick="fetchCurrentGpsLocation()" title="Detect My Current GPS Location" aria-label="Detect My Current GPS Location">
               <i class="fas fa-crosshairs"></i> Use GPS
             </button>
           </div>
@@ -979,7 +793,7 @@
           <button class="btn btn-whatsapp btn-block" onclick="sendCartOrderWhatsApp()">
             <i class="fab fa-whatsapp"></i> Send Order via WhatsApp
           </button>
-          <button class="btn btn-outline btn-sm" onclick="clearCart()" title="Clear all cart items">
+          <button class="btn btn-outline btn-sm" onclick="clearCart()" title="Clear all cart items" aria-label="Clear all cart items">
             <i class="fas fa-trash-alt"></i> Clear Cart
           </button>
         </div>
@@ -990,7 +804,7 @@
   <!-- Toast Notification -->
   <div id="toastNotification" class="toast-notification"></div>
 
-  <script src="script.js?v=11"></script>
+  <script defer src="script.js?v=12"></script>
 </body>
 
 </html>

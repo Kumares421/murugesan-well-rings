@@ -5,10 +5,20 @@ const SUPABASE_URL = "https://sedebhmfreuasjnnsjzn.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlZGViaG1mcmV1YXNqbm5zanpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNDE4NDgsImV4cCI6MjA5ODcxNzg0OH0.jtNLYqa4objmzxhRoeq3iAYmkChp29n83I6tWDt5prI";
 
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY,
-);
+// Safely create the client — SDKs are deferred so may load slightly after script.js
+let supabaseClient = null;
+function initSDKs() {
+  if (window.supabase && !supabaseClient) {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+  if (window.emailjs) {
+    try { emailjs.init("PhWpDktqqyb-g3RyQ"); } catch(e) {}
+  }
+  if (!supabaseClient) {
+    setTimeout(initSDKs, 50);
+  }
+}
+initSDKs();
 
 // Authorized admin emails
 const AUTHORIZED_EMAILS = [
@@ -16,11 +26,6 @@ const AUTHORIZED_EMAILS = [
   "murugesankumaresan00@gmail.com",
   "kumaresan.ai.421@gmail.com",
 ];
-
-// EmailJS Init
-(function () {
-  emailjs.init("PhWpDktqqyb-g3RyQ");
-})();
 
 // ============================================================
 // Default Light Theme Initialization
@@ -335,7 +340,7 @@ async function loadDynamicContent() {
         meta: "4ft outerDia / 11 inch height / 1.5 inch thickness",
         tag: "4ft outerDia / 11 inch height / 1.5 inch thickness",
         icon: "fas fa-info-circle",
-        img_url: "slide1.png",
+        img_url: "slide1.webp",
         category: "materials-only",
         price: 500,
       },
@@ -346,7 +351,7 @@ async function loadDynamicContent() {
         meta: "3ft outerDia / 11 inch height / 1.5 inch thickness",
         tag: "3ft outerDia / 11 inch height / 1.5 inch thickness",
         icon: "fas fa-info-circle",
-        img_url: "slide2.png",
+        img_url: "slide2.webp",
         category: "materials-only",
         price: 500,
       },
@@ -357,7 +362,7 @@ async function loadDynamicContent() {
         meta: "2 ft outerDia / 11 inch height / 1.5 inch thickness",
         tag: "2 ft outerDia / 11 inch height / 1.5 inch thickness",
         icon: "fas fa-info-circle",
-        img_url: "slide3.png",
+        img_url: "slide3.webp",
         category: "materials-only",
         price: 500,
       },
@@ -368,7 +373,7 @@ async function loadDynamicContent() {
         meta: "Material + Manual Digging",
         tag: "Digging + Supply",
         icon: "fas fa-tools",
-        img_url: "logo.png",
+        img_url: "logo.webp",
         category: "installation",
         price: 1200,
       },
@@ -379,7 +384,7 @@ async function loadDynamicContent() {
         meta: "Material + Manual Digging",
         tag: "Digging + Supply",
         icon: "fas fa-tools",
-        img_url: "logo.png",
+        img_url: "logo.webp",
         category: "installation",
         price: 1800,
       },
@@ -392,13 +397,13 @@ async function loadDynamicContent() {
         title: "Residential Well Sinking",
         desc: "Completed 35ft manual digging and reinforcement setup for clean water retrieval.",
         meta: "Kovilpathagai, Chennai",
-        img_url: "logo.png",
+        img_url: "logo.webp",
       },
       {
         title: "Drainage Well Ring Installation",
         desc: "Supplied and lowered 20 heavy concrete rings for stormwater drainage systems.",
         meta: "Avadi, Chennai",
-        img_url: "logo.png",
+        img_url: "logo.webp",
       },
     ];
   }
@@ -409,13 +414,13 @@ async function loadDynamicContent() {
         title: "Material Manufacturing",
         desc: "We manufacture reinforced concrete rings using premium cement and strong iron grids to prevent cracking.",
         meta: "",
-        img_url: "logo.png",
+        img_url: "logo.webp",
       },
       {
         title: "Manual Digging",
         desc: "Traditional hands-on manual digging by seasoned experts, achieving perfect vertical alignment.",
         meta: "",
-        img_url: "logo.png",
+        img_url: "logo.webp",
       },
     ];
   }
@@ -473,7 +478,7 @@ async function loadDynamicContent() {
 
       card.innerHTML = `
         <div class="material-img-wrapper">
-          <img src="${item.img_url || "logo.png"}" alt="${item.title}" class="card-image">
+          <img src="${item.img_url || "logo.png"}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy">
           <span class="material-tag">${item.tag || item.meta}</span>
         </div>
         <div class="material-details">
@@ -490,12 +495,13 @@ async function loadDynamicContent() {
           </div>
           <div class="card-cart-controls">
             <div class="piece-selector">
-              <button type="button" class="qty-btn" onclick="adjustCardQty('${itemId}', -1)" title="Decrease pieces">-</button>
-              <input type="number" id="cardQty_${itemId}" value="1" min="1" max="999" class="qty-input">
-              <button type="button" class="qty-btn" onclick="adjustCardQty('${itemId}', 1)" title="Increase pieces">+</button>
+              <button type="button" class="qty-btn" onclick="adjustCardQty('${itemId}', -1)" aria-label="Decrease quantity for ${escapedTitle}">-</button>
+              <label for="cardQty_${itemId}" class="sr-only">Quantity for ${escapedTitle}</label>
+              <input type="number" id="cardQty_${itemId}" value="1" min="1" max="999" class="qty-input" aria-label="Quantity for ${escapedTitle}">
+              <button type="button" class="qty-btn" onclick="adjustCardQty('${itemId}', 1)" aria-label="Increase quantity for ${escapedTitle}">+</button>
               <span class="qty-unit">pcs</span>
             </div>
-            <button type="button" class="btn btn-sm btn-primary add-to-cart-btn" onclick="addMaterialToCart('${itemId}', '${escapedTitle}', ${itemPrice}, '${item.img_url || "logo.png"}', '${escapedMeta}')">
+            <button type="button" class="btn btn-sm btn-primary add-to-cart-btn" aria-label="Add ${escapedTitle} to cart" onclick="addMaterialToCart('${itemId}', '${escapedTitle}', ${itemPrice}, '${item.img_url || "logo.png"}', '${escapedMeta}')">
               <i class="fas fa-cart-plus"></i> Add to Cart
             </button>
           </div>
@@ -512,7 +518,7 @@ async function loadDynamicContent() {
       card.className = "glass-card project-card";
       card.innerHTML = `
         <div class="material-img-wrapper">
-          <img src="${item.img_url || "logo.png"}" alt="${item.title}" class="card-image">
+          <img src="${item.img_url || "logo.png"}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy">
         </div>
         <div class="project-info" style="padding: 20px 15px;">
           <span class="project-location"><i class="fas fa-map-marker-alt"></i> ${item.meta}</span>
@@ -531,7 +537,7 @@ async function loadDynamicContent() {
       card.className = "glass-card service-card";
       card.innerHTML = `
         <div class="material-img-wrapper">
-          <img src="${item.img_url || "logo.png"}" alt="${item.title}" class="card-image">
+          <img src="${item.img_url || "logo.png"}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy">
         </div>
         <div style="padding: 20px 15px;">
           <h3>${item.title}</h3>
@@ -559,27 +565,11 @@ async function loadDynamicContent() {
   // Fallback to static slides if database is empty or errors
   if (slideshows.length === 0) {
     slideshows = [
-      {
-        id: "default3",
-        title: "Concrete Well Rings Yard",
-        img_url: "slide3.png",
-      },
-      {
-        id: "default4",
-        title: "Reinforced Concrete Rings Stack",
-        img_url: "slide4.png",
-      },
-      {
-        id: "default5",
-        title: "Concrete Fencing Posts",
-        img_url: "slide5.png",
-      },
-      { id: "default6", title: "Concrete Well Covers", img_url: "slide6.png" },
-      {
-        id: "default7",
-        title: "Deep Well Sinking Site",
-        img_url: "slide7.jpg",
-      },
+      { id: "default3", title: "Concrete Well Rings Yard",         img_url: "slide3.webp" },
+      { id: "default4", title: "Reinforced Concrete Rings Stack",   img_url: "slide4.webp" },
+      { id: "default5", title: "Concrete Fencing Posts",            img_url: "slide5.webp" },
+      { id: "default6", title: "Concrete Well Covers",              img_url: "slide6.webp" },
+      { id: "default7", title: "Deep Well Sinking Site",            img_url: "slide7.webp" },
     ];
   }
 
@@ -587,22 +577,31 @@ async function loadDynamicContent() {
   const slideshowDots = document.getElementById("slideshowDots");
 
   if (slideshowTrack && slideshowDots) {
-    // Keep 3D canvas containers (slide-3d-ring and slide-3d-post)
-    const canvasSlides = Array.from(slideshowTrack.querySelectorAll("div"));
-    slideshowTrack.innerHTML = "";
-    canvasSlides.forEach((slide) => {
-      if (slide.id === "slide-3d-ring" || slide.id === "slide-3d-post") {
-        slideshowTrack.appendChild(slide);
-      }
-    });
+    // Standard hero slides
+    slideshowTrack.innerHTML = `
+      <div class="slideshow-img active">
+        <img id="heroLcpImage" src="slide1.webp" alt="Murugesan Well Rings - RCC Concrete Well Ring" fetchpriority="high" width="560" height="420" style="width:100%;height:100%;object-fit:cover;display:block;">
+      </div>
+      <div class="slideshow-img">
+        <img src="slide2.webp" alt="Murugesan Well Rings - Concrete Fencing Post" loading="lazy" width="560" height="420" style="width:100%;height:100%;object-fit:cover;display:block;">
+      </div>
+    `;
 
     // Append custom dynamic slides
     slideshows.forEach((slide) => {
+      const slideDiv = document.createElement("div");
+      slideDiv.className = "slideshow-img";
       const img = document.createElement("img");
-      img.src = slide.img_url;
+      img.src = slide.img_url
+        ? slide.img_url.replace(/\.(png|jpg|jpeg)$/i, '.webp')
+        : slide.img_url;
       img.alt = slide.title || "Well Ring Slide";
-      img.className = "slideshow-img";
-      slideshowTrack.appendChild(img);
+      img.loading = "lazy";
+      img.width = 560;
+      img.height = 420;
+      img.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;";
+      slideDiv.appendChild(img);
+      slideshowTrack.appendChild(slideDiv);
     });
 
     // Generate indicator dots
@@ -2275,22 +2274,22 @@ function renderCartUI() {
         .map(
           (item, index) => `
         <div class="cart-item-row">
-          <img src="${item.imgUrl}" alt="${item.title}" class="cart-item-img">
+          <img src="${item.imgUrl}" alt="${item.title}" class="cart-item-img" width="50" height="50" loading="lazy">
           <div class="cart-item-details">
             <h4 class="cart-item-title">${item.title}</h4>
             <span class="cart-item-meta">${item.meta || "Concrete Material"}</span>
             <span class="cart-item-price">₹${item.price.toLocaleString("en-IN")} / piece</span>
           </div>
           <div class="cart-item-qty-control">
-            <button class="qty-btn" onclick="changePieces(${index}, -1)" title="Decrease pieces">-</button>
-            <input type="number" class="qty-input" value="${item.quantity}" min="1" onchange="updateCartQuantity(${index}, this.value)">
-            <button class="qty-btn" onclick="changePieces(${index}, 1)" title="Increase pieces">+</button>
+            <button class="qty-btn" onclick="changePieces(${index}, -1)" title="Decrease pieces" aria-label="Decrease quantity for ${item.title}">-</button>
+            <input type="number" class="qty-input" value="${item.quantity}" min="1" onchange="updateCartQuantity(${index}, this.value)" aria-label="Quantity for ${item.title}">
+            <button class="qty-btn" onclick="changePieces(${index}, 1)" title="Increase pieces" aria-label="Increase quantity for ${item.title}">+</button>
             <span class="qty-label">pcs</span>
           </div>
           <div class="cart-item-total">
             ₹${(item.price * item.quantity).toLocaleString("en-IN")}
           </div>
-          <button class="cart-item-remove" onclick="removeFromCart(${index})" title="Remove item">&times;</button>
+          <button class="cart-item-remove" onclick="removeFromCart(${index})" title="Remove item" aria-label="Remove ${item.title} from cart">&times;</button>
         </div>
       `,
         )

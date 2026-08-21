@@ -30,7 +30,7 @@
   <div class="announcement-bar" id="welcomeBar">
     <div class="container welcome-container">
       <span><span class="badge">Admin</span> Murugesan Well Rings - Content Management System</span>
-      <button class="close-welcome-btn" onclick="dismissWelcomeBar()"><i class="fas fa-times"></i></button>
+      <button class="close-welcome-btn" onclick="dismissWelcomeBar()" aria-label="Dismiss announcement"><i class="fas fa-times"></i></button>
     </div>
   </div>
 
@@ -38,7 +38,7 @@
   <header class="header">
     <div class="container nav-container">
       <a href="index.html#home" class="logo-area">
-        <img src="logo.png" alt="Murugesan Well Rings Logo" class="site-logo">
+        <img src="logo.png" alt="Murugesan Well Rings Logo" class="site-logo" width="48" height="48" fetchpriority="high">
         <span class="logo-text">Murugesan<span class="highlight">WellRings</span></span>
       </a>
 
@@ -60,6 +60,8 @@
     </div>
   </header>
   <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+
+  <main id="main-content">
 
   <!-- Admin Portal Main Section -->
   <section id="profile" class="section profile-section" style="padding-top: 60px; min-height: 70vh;">
@@ -173,6 +175,8 @@
       </div>
     </div>
   </section>
+
+  </main>
 
   <!-- Footer -->
   <footer class="footer">
