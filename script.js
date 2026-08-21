@@ -288,7 +288,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   initCustomerSession();
   updateDeliveryRateBadges();
-  loadDynamicContent();
+
+  // Defer Supabase data loading until after first paint (improves LCP/FCP).
+  // Use requestIdleCallback if available, otherwise fall back to 1.5s setTimeout.
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(() => loadDynamicContent(), { timeout: 3000 });
+  } else {
+    setTimeout(loadDynamicContent, 1500);
+  }
 
   const uploadTypeSelect = document.getElementById("uploadType");
   if (uploadTypeSelect) {
@@ -615,40 +622,37 @@ async function loadDynamicContent() {
   const slideshowDots = document.getElementById("slideshowDots");
 
   if (slideshowTrack && slideshowDots) {
-    // Standard hero slides
-    slideshowTrack.innerHTML = `
-      <div class="slideshow-img active">
-        <img id="heroLcpImage" src="slide1.webp" alt="Murugesan Well Rings - RCC Concrete Well Ring" fetchpriority="high" width="560" height="420" style="width:100%;height:100%;object-fit:cover;display:block;">
-      </div>
-      <div class="slideshow-img">
-        <img src="slide2.webp" alt="Murugesan Well Rings - Concrete Fencing Post" loading="lazy" width="560" height="420" style="width:100%;height:100%;object-fit:cover;display:block;">
-      </div>
-    `;
+    // IMPORTANT: Do NOT reset slideshowTrack.innerHTML — the first 2 static slides
+    // (slide1.webp LCP + slide2.webp) are already rendered in HTML. Resetting them
+    // would destroy the painted LCP element and cause CLS/LCP regression.
+    // Instead, remove only previously appended dynamic slides (those without id).
+    const existingDynamic = slideshowTrack.querySelectorAll('.slideshow-img:not(:nth-child(1)):not(:nth-child(2))');
+    existingDynamic.forEach(el => el.remove());
 
-    // Append custom dynamic slides
+    // Append custom dynamic slides after the 2 static ones
     slideshows.forEach((slide) => {
-      const slideDiv = document.createElement("div");
-      slideDiv.className = "slideshow-img";
-      const img = document.createElement("img");
+      const slideDiv = document.createElement('div');
+      slideDiv.className = 'slideshow-img';
+      const img = document.createElement('img');
       img.src = slide.img_url
         ? slide.img_url.replace(/\.(png|jpg|jpeg)$/i, '.webp')
-        : slide.img_url;
-      img.alt = slide.title || "Well Ring Slide";
-      img.loading = "lazy";
+        : (slide.img_url || 'slide3.webp');
+      img.alt = slide.title || 'Well Ring Slide';
+      img.loading = 'lazy';
       img.width = 560;
       img.height = 420;
-      img.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;";
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
       slideDiv.appendChild(img);
       slideshowTrack.appendChild(slideDiv);
     });
 
     // Generate indicator dots
-    slideshowDots.innerHTML = "";
+    slideshowDots.innerHTML = '';
     const totalSlides = 2 + slideshows.length;
     for (let i = 0; i < totalSlides; i++) {
-      const dot = document.createElement("span");
-      dot.className = i === 0 ? "dot active" : "dot";
-      dot.setAttribute("data-index", i);
+      const dot = document.createElement('span');
+      dot.className = i === 0 ? 'dot active' : 'dot';
+      dot.setAttribute('data-index', i);
       slideshowDots.appendChild(dot);
     }
 
