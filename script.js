@@ -27,6 +27,40 @@ const AUTHORIZED_EMAILS = [
   "kumaresan.ai.421@gmail.com",
 ];
 
+// Safe helper to resolve product image URLs with fallbacks for missing/invalid database entries
+function resolveProductImage(item) {
+  let url = (item && item.img_url) ? String(item.img_url).trim() : "";
+
+  // Valid HTTP/HTTPS or base64 data URLs
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
+    return url;
+  }
+
+  // Known local slide / asset files
+  if (/^slide[1-7]\.(png|jpg|jpeg|webp)$/i.test(url)) {
+    return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
+  }
+  if (/^logo\.(png|jpg|jpeg|webp)$/i.test(url) || /^about-bg\.(png|jpg|jpeg|webp)$/i.test(url)) {
+    return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
+  }
+
+  // Other valid image filenames
+  if (/\.(png|jpg|jpeg|webp|gif|svg)$/i.test(url)) {
+    return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
+  }
+
+  // Title-based fallback heuristics if img_url is empty, invalid, or non-image text
+  const title = ((item && item.title) || "").toLowerCase();
+  if (title.includes("4ft") || title.includes("4 ft")) return "slide1.webp";
+  if (title.includes("3ft") || title.includes("3 ft")) return "slide2.webp";
+  if (title.includes("2ft") || title.includes("2 ft")) return "slide3.webp";
+  if (title.includes("fence") || title.includes("post")) return "slide5.webp";
+  if (title.includes("cover")) return "slide6.webp";
+  if (title.includes("digging") || title.includes("well") || title.includes("sinking") || title.includes("residential") || title.includes("drainage")) return "slide7.webp";
+
+  return "slide1.webp";
+}
+
 // ============================================================
 // Default Light Theme Initialization
 // ============================================================
@@ -475,40 +509,6 @@ async function loadDynamicContent() {
       const escapedMeta = (item.meta || "")
         .replace(/'/g, "\\'")
         .replace(/"/g, "&quot;");
-
-// Safe helper to resolve product image URLs with fallbacks for missing/invalid database entries
-function resolveProductImage(item) {
-  let url = (item && item.img_url) ? item.img_url.trim() : "";
-
-  // Valid HTTP/HTTPS or base64 data URLs
-  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
-    return url;
-  }
-
-  // Known local slide / asset files
-  if (/^slide[1-7]\.(png|jpg|jpeg|webp)$/i.test(url)) {
-    return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
-  }
-  if (/^logo\.(png|jpg|jpeg|webp)$/i.test(url) || /^about-bg\.(png|jpg|jpeg|webp)$/i.test(url)) {
-    return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
-  }
-
-  // Other valid image filenames
-  if (/\.(png|jpg|jpeg|webp|gif|svg)$/i.test(url)) {
-    return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
-  }
-
-  // Title-based fallback heuristics if img_url is empty, invalid, or non-image text
-  const title = ((item && item.title) || "").toLowerCase();
-  if (title.includes("4ft") || title.includes("4 ft")) return "slide1.webp";
-  if (title.includes("3ft") || title.includes("3 ft")) return "slide2.webp";
-  if (title.includes("2ft") || title.includes("2 ft")) return "slide3.webp";
-  if (title.includes("fence") || title.includes("post")) return "slide5.webp";
-  if (title.includes("cover")) return "slide6.webp";
-  if (title.includes("digging") || title.includes("well") || title.includes("sinking")) return "slide7.webp";
-
-  return "slide1.webp";
-}
 
       const itemImgUrl = resolveProductImage(item);
 
