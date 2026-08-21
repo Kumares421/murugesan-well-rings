@@ -485,10 +485,15 @@ body {
 .hero-slideshow {
   position: relative;
   width: 100%;
-  height: 260px;
+  /* aspect-ratio reserves space before images load, eliminating CLS from
+     image load or breakpoint height changes (was 260px -> 220px -> 200px) */
+  aspect-ratio: 4 / 3;
+  min-height: 200px;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  /* contain prevents the slideshow from causing reflow in the rest of the page */
+  contain: layout;
 }
 
 .slideshow-track {
@@ -503,17 +508,27 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
   opacity: 0;
   transition: opacity 1s ease-in-out, transform 6s ease-in-out;
   transform: scale(1);
   pointer-events: none;
+  /* display:flex ensures the child <img> fills the container */
+  display: flex;
+}
+
+.slideshow-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
 }
 
 .slideshow-img.active {
   opacity: 1;
   transform: scale(1.08);
   pointer-events: auto;
+  /* IMPORTANT: do NOT set position:relative on .active — it collapses container */
 }
 
 .slideshow-dots {
@@ -1297,7 +1312,9 @@ body {
   }
 
   .hero-slideshow {
-    height: 220px;
+    /* Keep aspect-ratio — remove the breakpoint fixed height override
+       that was causing CLS when breakpoints triggered */
+    min-height: 180px;
   }
 
   .about-list {
@@ -1508,7 +1525,7 @@ body {
   }
 
   .hero-slideshow {
-    height: 200px;
+    min-height: 160px;
   }
 
   .hero-badge-card {
@@ -1754,7 +1771,7 @@ body {
   }
 
   .hero-slideshow {
-    height: 170px;
+    min-height: 140px; /* aspect-ratio handles proportional sizing; just enforce minimum */
   }
 
   .slideshow-dots .dot {

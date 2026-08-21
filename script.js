@@ -2526,3 +2526,30 @@ function showToast(msg) {
     toast.classList.remove("show");
   }, 3500);
 }
+
+// ============================================================
+// Google Maps — true lazy loading via IntersectionObserver
+// The iframe uses data-src so it doesn't load until the
+// contact section approaches the viewport (~200px before).
+// ============================================================
+(function () {
+  const mapIframe = document.getElementById('contactMapIframe');
+  if (!mapIframe) return;
+  if ('IntersectionObserver' in window) {
+    const obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          if (el.dataset.src && !el.src) {
+            el.src = el.dataset.src;
+          }
+          obs.unobserve(el);
+        }
+      });
+    }, { rootMargin: '200px' });
+    obs.observe(mapIframe);
+  } else {
+    // Fallback for browsers without IntersectionObserver
+    if (mapIframe.dataset.src) mapIframe.src = mapIframe.dataset.src;
+  }
+})();

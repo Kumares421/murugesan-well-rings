@@ -150,43 +150,53 @@
   }
   </script>
 
-  <!-- Critical CSS inline — above-the-fold styles to avoid render-blocking -->
+  <!-- Inline CSS: only the critical slideshow layout fix to prevent CLS -->
+  <!-- style.css is render-blocking to prevent layout flash CLS regression -->
   <style>
-    :root{--font-primary:'Outfit',sans-serif;--bg-primary:#f8fafc;--bg-secondary:#fff;--bg-alt:#f1f5f9;--text-main:#0f172a;--text-muted:#475569;--border-color:#e2e8f0;--primary-teal:#0d9488;--primary-teal-hover:#0f766e;--accent-blue:#2563eb;--gradient-primary:linear-gradient(135deg,#0d9488 0%,#2563eb 100%);--gradient-secondary:linear-gradient(135deg,#111827 0%,#1f2937 100%);--glass-bg:rgba(255,255,255,.75);--glass-border:rgba(255,255,255,.4);--shadow-sm:0 2px 8px rgba(0,0,0,.05);--shadow-md:0 10px 30px rgba(13,148,136,.08);--shadow-lg:0 20px 40px rgba(0,0,0,.1);--border-radius:16px;--transition:all .3s cubic-bezier(.4,0,.2,1)}
-    *{box-sizing:border-box;margin:0;padding:0}
-    html{scroll-behavior:smooth;width:100%;max-width:100vw;overflow-x:hidden}
-    body{font-family:var(--font-primary);background-color:var(--bg-primary);color:var(--text-main);line-height:1.6;width:100%;max-width:100vw;overflow-x:hidden}
-    .container{width:100%;max-width:1200px;margin:0 auto;padding:0 24px}
-    .announcement-bar{background:var(--gradient-primary);color:#fff;font-size:.9rem;font-weight:600;padding:8px 0;position:relative;z-index:1000}
-    .welcome-container{display:flex;justify-content:space-between;align-items:center}
-    .header{position:fixed;top:0;left:0;right:0;z-index:999;background:rgba(248,250,252,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-color);transition:var(--transition)}
-    .nav-container{display:flex;align-items:center;justify-content:space-between;height:70px}
-    .logo-area{display:flex;align-items:center;gap:10px;text-decoration:none}
-    .site-logo{width:48px;height:48px;object-fit:contain}
-    .logo-text{font-size:1.25rem;font-weight:800;color:var(--text-main)}
-    .logo-text .highlight{color:var(--primary-teal)}
-    .nav-menu{display:flex;gap:8px;list-style:none}
-    .nav-link{text-decoration:none;color:var(--text-muted);font-weight:500;padding:6px 10px;border-radius:8px;transition:var(--transition)}
-    .header-actions{display:flex;align-items:center;gap:8px}
-    .hero-section{min-height:100vh;display:flex;align-items:center;padding-top:70px;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0d3d3a 100%);position:relative;overflow:hidden}
-    .hero-overlay{position:absolute;inset:0;background:rgba(0,0,0,.35)}
-    .hero-container{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;position:relative;z-index:2;width:100%}
-    .hero-content{color:#fff}
-    .hero-title{font-size:clamp(1.8rem,4vw,3rem);font-weight:800;line-height:1.15;margin-bottom:16px}
-    .hero-description{font-size:1rem;opacity:.85;margin-bottom:28px;max-width:500px}
-    .hero-badge-container{position:relative;display:flex;flex-direction:column;gap:16px;align-items:flex-end}
-    .hero-slideshow{width:100%;max-width:560px;border-radius:20px;overflow:hidden;aspect-ratio:4/3;position:relative;box-shadow:var(--shadow-lg)}
-    .slideshow-track{width:100%;height:100%;position:relative}
-    .slideshow-img{position:absolute;inset:0;opacity:0;transition:opacity .6s ease}
-    .slideshow-img.active{opacity:1;position:relative}
-    .mobile-menu-btn{display:none;background:none;border:none;cursor:pointer;padding:8px;font-size:1.2rem;color:var(--text-main)}
-    @media(max-width:768px){.hero-container{grid-template-columns:1fr}.nav-menu{display:none}.mobile-menu-btn{display:flex;align-items:center}}
+    /* Slideshow container: use aspect-ratio so space is reserved BEFORE img loads */
+    .hero-slideshow {
+      aspect-ratio: 4 / 3;
+      min-height: 200px;
+      contain: layout size; /* prevents outside reflow */
+    }
+    /* ALL slide divs are absolutely stacked — never use position:relative on .active */
+    .slideshow-track {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    .slideshow-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+      pointer-events: none;
+    }
+    .slideshow-img.active {
+      opacity: 1;
+      pointer-events: auto;
+      /* NO position:relative here — that collapses the container height */
+    }
+    .slideshow-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    /* Ensure hero section reserves space even before full CSS loads */
+    .hero-section {
+      min-height: 85vh;
+    }
+    @media (max-width: 768px) {
+      .hero-section { min-height: auto; }
+      .hero-slideshow { aspect-ratio: 4/3; min-height: 180px; }
+    }
   </style>
 
-  <!-- Full stylesheet — non-blocking (loads after paint) -->
-  <link rel="preload" as="style" href="style.css?v=15" onload="this.rel='stylesheet'">
-  <link rel="stylesheet" href="style.css?v=15" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="style.css?v=15"></noscript>
+  <!-- Full stylesheet — render-blocking to prevent layout shift CLS -->
+  <link rel="stylesheet" href="style.css?v=15">
 </head>
 
 <body>
@@ -487,10 +497,11 @@
           </div>
 
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d15544.737611676801!2d80.1100475!3d13.0874968!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a5263f75ea4140d%3A0x3a5100189489425f!2sMurugesan%20Well%20Rings!5e0!3m2!1sen!2sin!4v1781805192028!5m2!1sen!2sin"
+            id="contactMapIframe"
+            data-src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d15544.737611676801!2d80.1100475!3d13.0874968!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a5263f75ea4140d%3A0x3a5100189489425f!2sMurugesan%20Well%20Rings!5e0!3m2!1sen!2sin!4v1781805192028!5m2!1sen!2sin"
             width="100%" height="100%" style="border:0; flex-grow: 1; border-radius: 8px;" allowfullscreen=""
             title="Google Maps Location of Murugesan Well Rings in Avadi, Chennai"
-            loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
 
         <div class="contact-form-wrapper glass-card">
@@ -840,7 +851,7 @@
   <!-- Toast Notification -->
   <div id="toastNotification" class="toast-notification"></div>
 
-  <script defer src="script.js?v=16"></script>
+  <script defer src="script.js?v=17"></script>
 </body>
 
 </html>
