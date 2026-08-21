@@ -289,6 +289,11 @@ document.addEventListener("DOMContentLoaded", () => {
   initCustomerSession();
   updateDeliveryRateBadges();
 
+  // Start hero slideshow immediately for static slides
+  if (window.startHeroSlideshow) {
+    window.startHeroSlideshow();
+  }
+
   // Defer Supabase data loading until after first paint (improves LCP/FCP).
   // Use requestIdleCallback if available, otherwise fall back to 1.5s setTimeout.
   if ('requestIdleCallback' in window) {
