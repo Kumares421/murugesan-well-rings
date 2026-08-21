@@ -476,9 +476,11 @@ async function loadDynamicContent() {
         .replace(/'/g, "\\'")
         .replace(/"/g, "&quot;");
 
+      const itemImgUrl = (item.img_url || "logo.webp").replace(/\.(png|jpg|jpeg)$/i, '.webp');
+
       card.innerHTML = `
         <div class="material-img-wrapper">
-          <img src="${item.img_url || "logo.png"}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy">
+          <img src="${itemImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy">
           <span class="material-tag">${item.tag || item.meta}</span>
         </div>
         <div class="material-details">
@@ -501,7 +503,7 @@ async function loadDynamicContent() {
               <button type="button" class="qty-btn" onclick="adjustCardQty('${itemId}', 1)" aria-label="Increase quantity for ${escapedTitle}">+</button>
               <span class="qty-unit">pcs</span>
             </div>
-            <button type="button" class="btn btn-sm btn-primary add-to-cart-btn" aria-label="Add ${escapedTitle} to cart" onclick="addMaterialToCart('${itemId}', '${escapedTitle}', ${itemPrice}, '${item.img_url || "logo.png"}', '${escapedMeta}')">
+            <button type="button" class="btn btn-sm btn-primary add-to-cart-btn" aria-label="Add ${escapedTitle} to cart" onclick="addMaterialToCart('${itemId}', '${escapedTitle}', ${itemPrice}, '${itemImgUrl}', '${escapedMeta}')">
               <i class="fas fa-cart-plus"></i> Add to Cart
             </button>
           </div>
@@ -516,9 +518,10 @@ async function loadDynamicContent() {
     projects.forEach((item) => {
       const card = document.createElement("div");
       card.className = "glass-card project-card";
+      const itemImgUrl = (item.img_url || "logo.webp").replace(/\.(png|jpg|jpeg)$/i, '.webp');
       card.innerHTML = `
         <div class="material-img-wrapper">
-          <img src="${item.img_url || "logo.png"}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy">
+          <img src="${itemImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy">
         </div>
         <div class="project-info" style="padding: 20px 15px;">
           <span class="project-location"><i class="fas fa-map-marker-alt"></i> ${item.meta}</span>
@@ -535,9 +538,10 @@ async function loadDynamicContent() {
     services.forEach((item) => {
       const card = document.createElement("div");
       card.className = "glass-card service-card";
+      const itemImgUrl = (item.img_url || "logo.webp").replace(/\.(png|jpg|jpeg)$/i, '.webp');
       card.innerHTML = `
         <div class="material-img-wrapper">
-          <img src="${item.img_url || "logo.png"}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy">
+          <img src="${itemImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy">
         </div>
         <div style="padding: 20px 15px;">
           <h3>${item.title}</h3>
