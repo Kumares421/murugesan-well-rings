@@ -476,11 +476,45 @@ async function loadDynamicContent() {
         .replace(/'/g, "\\'")
         .replace(/"/g, "&quot;");
 
-      const itemImgUrl = (item.img_url || "logo.webp").replace(/\.(png|jpg|jpeg)$/i, '.webp');
+// Safe helper to resolve product image URLs with fallbacks for missing/invalid database entries
+function resolveProductImage(item) {
+  let url = (item && item.img_url) ? item.img_url.trim() : "";
+
+  // Valid HTTP/HTTPS or base64 data URLs
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
+    return url;
+  }
+
+  // Known local slide / asset files
+  if (/^slide[1-7]\.(png|jpg|jpeg|webp)$/i.test(url)) {
+    return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
+  }
+  if (/^logo\.(png|jpg|jpeg|webp)$/i.test(url) || /^about-bg\.(png|jpg|jpeg|webp)$/i.test(url)) {
+    return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
+  }
+
+  // Other valid image filenames
+  if (/\.(png|jpg|jpeg|webp|gif|svg)$/i.test(url)) {
+    return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
+  }
+
+  // Title-based fallback heuristics if img_url is empty, invalid, or non-image text
+  const title = ((item && item.title) || "").toLowerCase();
+  if (title.includes("4ft") || title.includes("4 ft")) return "slide1.webp";
+  if (title.includes("3ft") || title.includes("3 ft")) return "slide2.webp";
+  if (title.includes("2ft") || title.includes("2 ft")) return "slide3.webp";
+  if (title.includes("fence") || title.includes("post")) return "slide5.webp";
+  if (title.includes("cover")) return "slide6.webp";
+  if (title.includes("digging") || title.includes("well") || title.includes("sinking")) return "slide7.webp";
+
+  return "slide1.webp";
+}
+
+      const itemImgUrl = resolveProductImage(item);
 
       card.innerHTML = `
         <div class="material-img-wrapper">
-          <img src="${itemImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy">
+          <img src="${itemImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy" onerror="this.onerror=null; this.src='logo.png';">
           <span class="material-tag">${item.tag || item.meta}</span>
         </div>
         <div class="material-details">
@@ -518,10 +552,10 @@ async function loadDynamicContent() {
     projects.forEach((item) => {
       const card = document.createElement("div");
       card.className = "glass-card project-card";
-      const itemImgUrl = (item.img_url || "logo.webp").replace(/\.(png|jpg|jpeg)$/i, '.webp');
+      const itemImgUrl = resolveProductImage(item);
       card.innerHTML = `
         <div class="material-img-wrapper">
-          <img src="${itemImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy">
+          <img src="${itemImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy" onerror="this.onerror=null; this.src='logo.png';">
         </div>
         <div class="project-info" style="padding: 20px 15px;">
           <span class="project-location"><i class="fas fa-map-marker-alt"></i> ${item.meta}</span>
@@ -538,10 +572,10 @@ async function loadDynamicContent() {
     services.forEach((item) => {
       const card = document.createElement("div");
       card.className = "glass-card service-card";
-      const itemImgUrl = (item.img_url || "logo.webp").replace(/\.(png|jpg|jpeg)$/i, '.webp');
+      const itemImgUrl = resolveProductImage(item);
       card.innerHTML = `
         <div class="material-img-wrapper">
-          <img src="${itemImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy">
+          <img src="${itemImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy" onerror="this.onerror=null; this.src='logo.png';">
         </div>
         <div style="padding: 20px 15px;">
           <h3>${item.title}</h3>
@@ -2278,7 +2312,7 @@ function renderCartUI() {
         .map(
           (item, index) => `
         <div class="cart-item-row">
-          <img src="${item.imgUrl}" alt="${item.title}" class="cart-item-img" width="50" height="50" loading="lazy">
+          <img src="${resolveProductImage({ title: item.title, img_url: item.imgUrl })}" alt="${item.title}" class="cart-item-img" width="50" height="50" loading="lazy" onerror="this.onerror=null; this.src='logo.png';">
           <div class="cart-item-details">
             <h4 class="cart-item-title">${item.title}</h4>
             <span class="cart-item-meta">${item.meta || "Concrete Material"}</span>
