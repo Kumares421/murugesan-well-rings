@@ -984,10 +984,10 @@ async function renderAdminManageList() {
     '<p style="color: var(--text-muted); text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading entries...</p>';
 
   const categories = [
-    { key: "materials", label: "Materials & Installations" },
-    { key: "projects", label: "Projects" },
-    { key: "services", label: "Services" },
-    { key: "slideshow", label: "Homepage Slideshow" },
+    { key: "materials", label: "Materials & Installations", select: "id,title,desc,img_url,price,category" },
+    { key: "projects", label: "Projects", select: "id,title,desc,img_url" },
+    { key: "services", label: "Services", select: "id,title,desc,img_url" },
+    { key: "slideshow", label: "Homepage Slideshow", select: "id,title,desc,img_url" },
   ];
 
   listContainer.innerHTML = "";
@@ -995,10 +995,10 @@ async function renderAdminManageList() {
   for (const cat of categories) {
     let items = [];
     try {
-      // Select only the columns needed for the admin list — avoids fetching unused data
+      // Select only the columns needed for each table — avoids requesting non-existent columns
       const { data, error } = await supabaseClient
         .from(cat.key)
-        .select("id,title,desc,img_url,price,category")
+        .select(cat.select)
         .order("created_at", { ascending: true });
       if (!error) {
         items = data || [];
