@@ -333,9 +333,21 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ============================================================
+// In-session data cache — prevents repeated Supabase fetches
+// within the same browser session / page load.
+// ============================================================
+const _dynamicCache = {
+  loaded: false,
+  materials: null,
+  projects: null,
+  services: null,
+  slideshows: null,
+};
+
+// ============================================================
 // Load Material, Project, and Service data from Supabase
 // ============================================================
-async function loadDynamicContent() {
+async function loadDynamicContent(forceRefresh) {
   const materialsGrid = document.getElementById("materialsGrid");
   const projectsGrid = document.getElementById("projectsGrid");
   const servicesGrid = document.getElementById("servicesGrid");
@@ -344,36 +356,50 @@ async function loadDynamicContent() {
   let projects = [];
   let services = [];
 
-  // Fetch all data in parallel with error handling
-  try {
-    const [materialsRes, projectsRes, servicesRes] = await Promise.all([
-      supabaseClient
-        .from("materials")
-        .select("*")
-        .order("created_at", { ascending: true }),
-      supabaseClient
-        .from("projects")
-        .select("*")
-        .order("created_at", { ascending: true }),
-      supabaseClient
-        .from("services")
-        .select("*")
-        .order("created_at", { ascending: true }),
-    ]);
+  // ── Session cache: skip re-fetching if data was already loaded this page session.
+  // Pass forceRefresh=true (e.g. after admin edits) to bypass the cache.
+  if (_dynamicCache.loaded && !forceRefresh) {
+    materials = _dynamicCache.materials || [];
+    projects  = _dynamicCache.projects  || [];
+    services  = _dynamicCache.services  || [];
+  } else {
+    // Fetch only needed columns — reduces DB transfer size and egress
+    try {
+      const [materialsRes, projectsRes, servicesRes] = await Promise.all([
+        supabaseClient
+          .from("materials")
+          .select("id,title,desc,meta,tag,icon,img_url,category,price")
+          .order("created_at", { ascending: true }),
+        supabaseClient
+          .from("projects")
+          .select("id,title,desc,meta,img_url")
+          .order("created_at", { ascending: true }),
+        supabaseClient
+          .from("services")
+          .select("id,title,desc,meta,img_url")
+          .order("created_at", { ascending: true }),
+      ]);
 
-    if (materialsRes.error)
-      console.error("Error fetching materials:", materialsRes.error);
-    else materials = materialsRes.data || [];
+      if (materialsRes.error)
+        console.error("Error fetching materials:", materialsRes.error);
+      else materials = materialsRes.data || [];
 
-    if (projectsRes.error)
-      console.error("Error fetching projects:", projectsRes.error);
-    else projects = projectsRes.data || [];
+      if (projectsRes.error)
+        console.error("Error fetching projects:", projectsRes.error);
+      else projects = projectsRes.data || [];
 
-    if (servicesRes.error)
-      console.error("Error fetching services:", servicesRes.error);
-    else services = servicesRes.data || [];
-  } catch (err) {
-    console.error("Failed to connect to database. Using fallback data.", err);
+      if (servicesRes.error)
+        console.error("Error fetching services:", servicesRes.error);
+      else services = servicesRes.data || [];
+
+      // Store in session cache
+      _dynamicCache.materials = materials;
+      _dynamicCache.projects  = projects;
+      _dynamicCache.services  = services;
+      _dynamicCache.loaded = true;
+    } catch (err) {
+      console.error("Failed to connect to database. Using fallback data.", err);
+    }
   }
 
   // Fallbacks if data is empty or fails to load
@@ -598,18 +624,24 @@ async function loadDynamicContent() {
     });
   }
 
-  // Fetch slideshow images dynamically from Supabase
+  // Fetch slideshow images dynamically from Supabase (use session cache if available)
   let slideshows = [];
-  try {
-    const { data, error } = await supabaseClient
-      .from("slideshow")
-      .select("*")
-      .order("created_at", { ascending: true });
-    if (!error) {
-      slideshows = data || [];
+  if (_dynamicCache.slideshows && !forceRefresh) {
+    slideshows = _dynamicCache.slideshows;
+  } else {
+    try {
+      // Only fetch the columns we need — reduces data transfer
+      const { data, error } = await supabaseClient
+        .from("slideshow")
+        .select("id,title,img_url")
+        .order("created_at", { ascending: true });
+      if (!error) {
+        slideshows = data || [];
+        _dynamicCache.slideshows = slideshows;
+      }
+    } catch (err) {
+      console.warn("Slideshow table could not be loaded, using defaults:", err);
     }
-  } catch (err) {
-    console.warn("Slideshow table could not be loaded, using defaults:", err);
   }
 
   // Fallback to static slides if database is empty or errors
@@ -963,9 +995,10 @@ async function renderAdminManageList() {
   for (const cat of categories) {
     let items = [];
     try {
+      // Select only the columns needed for the admin list — avoids fetching unused data
       const { data, error } = await supabaseClient
         .from(cat.key)
-        .select("*")
+        .select("id,title,desc,img_url,price,category")
         .order("created_at", { ascending: true });
       if (!error) {
         items = data || [];
@@ -1072,8 +1105,12 @@ window.deleteEntry = async function (table, id) {
       alert("Failed to delete: " + error.message);
     } else {
       alert("Item removed successfully!");
+      // Invalidate session cache so next loadDynamicContent re-fetches fresh data
+      _dynamicCache.loaded = false;
+      _dynamicCache.slideshows = null;
       renderAdminManageList();
-      loadDynamicContent();
+      // Use forceRefresh=true so the public grid reflects the deletion
+      loadDynamicContent(true);
     }
   }
 };
@@ -1206,8 +1243,11 @@ window.seedDefaultSlides = async function () {
       alert("Failed to seed default slides: " + error.message);
     } else {
       alert("Default slideshow images successfully loaded into database!");
+      // Invalidate session cache so the slideshow refreshes with the new seeds
+      _dynamicCache.loaded = false;
+      _dynamicCache.slideshows = null;
       renderAdminManageList();
-      loadDynamicContent();
+      loadDynamicContent(true);
     }
   } catch (err) {
     alert("Error seeding slides: " + (err.message || err));
@@ -1222,10 +1262,12 @@ async function uploadImageToStorage(file) {
   const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
   const filePath = fileName;
 
+  // Use 1-year cache-control so browsers and CDN cache these images long-term,
+  // dramatically reducing repeated Supabase cached egress.
   const { data, error } = await supabaseClient.storage
     .from("images")
     .upload(filePath, file, {
-      cacheControl: "3600",
+      cacheControl: "31536000", // 1 year (was 3600 = 1 hour)
       upsert: false,
     });
 
@@ -1456,8 +1498,11 @@ async function handleAdminUpload(event) {
     // Refresh visibility state of fields
     updateFormFieldsVisibility();
 
+    // Invalidate session cache so the public grid reloads with the new entry
+    _dynamicCache.loaded = false;
+    _dynamicCache.slideshows = null;
     renderAdminManageList();
-    loadDynamicContent();
+    loadDynamicContent(true);
   } catch (err) {
     console.error("Upload error:", err);
     alert("Error: " + (err.message || JSON.stringify(err)));
@@ -2193,6 +2238,9 @@ function clearCart() {
   }
 }
 
+// Debounced cloud sync — prevents a Supabase write on every single cart +/- click.
+// Waits 3 seconds of inactivity before syncing, batching rapid cart changes into one write.
+let _cartSyncTimer = null;
 function saveCart() {
   localStorage.setItem("wellrings_cart", JSON.stringify(cart));
   if (customerSession && customerSession.phone) {
@@ -2203,7 +2251,11 @@ function saveCart() {
   }
   updateCartBadges();
   renderCartUI();
-  syncCustomerSessionToCloud();
+  // Debounce: only sync to cloud after 3 seconds of no further cart changes
+  if (_cartSyncTimer) clearTimeout(_cartSyncTimer);
+  _cartSyncTimer = setTimeout(() => {
+    syncCustomerSessionToCloud();
+  }, 3000);
 }
 
 function updateCartBadges() {
