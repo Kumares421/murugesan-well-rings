@@ -1265,41 +1265,147 @@ window.seedDefaultSlides = async function () {
 };
 
 // ============================================================
+// Auto-compress image via Canvas → WebP before uploading.
+// Targets max 1600px wide, WebP quality 0.82.
+// Falls back gracefully if Canvas/WebP is unsupported.
+// ============================================================
+async function compressImageToWebP(file) {
+  // Only compress raster images (not SVG)
+  if (!file.type.startsWith("image/") || file.type === "image/svg+xml") {
+    return file;
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = function () {
+      URL.revokeObjectURL(objectUrl);
+
+      const MAX_WIDTH  = 1600;
+      const MAX_HEIGHT = 1600;
+      const QUALITY    = 0.82; // 82% WebP quality — excellent visuals, ~90-97% smaller than phone JPEGs
+
+      let { width, height } = img;
+
+      // Scale down if either dimension exceeds limit
+      if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+        const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height);
+        width  = Math.round(width  * ratio);
+        height = Math.round(height * ratio);
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width  = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Try WebP first; fall back to JPEG if unsupported
+      const tryWebP = () =>
+        new Promise((res) => canvas.toBlob(res, "image/webp", QUALITY));
+      const tryJPEG = () =>
+        new Promise((res) => canvas.toBlob(res, "image/jpeg", QUALITY));
+
+      tryWebP().then((blob) => {
+        if (blob && blob.size > 0) {
+          // Use WebP — rename file with .webp extension
+          const compressed = new File(
+            [blob],
+            file.name.replace(/\.[^.]+$/, "") + ".webp",
+            { type: "image/webp" }
+          );
+          resolve(compressed);
+        } else {
+          // WebP not supported — fall back to JPEG
+          tryJPEG().then((jpegBlob) => {
+            if (jpegBlob && jpegBlob.size > 0) {
+              const compressed = new File(
+                [jpegBlob],
+                file.name.replace(/\.[^.]+$/, "") + ".jpg",
+                { type: "image/jpeg" }
+              );
+              resolve(compressed);
+            } else {
+              // Canvas compression failed entirely — use original
+              resolve(file);
+            }
+          });
+        }
+      }).catch(() => resolve(file)); // If anything throws, use original
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(file); // Can't load image — use original
+    };
+
+    img.src = objectUrl;
+  });
+}
+
+// ============================================================
 // Upload Image to Supabase Storage
+// Auto-compresses to WebP before upload — no external service needed.
 // ============================================================
 async function uploadImageToStorage(file) {
-  // ── Egress guard: warn admin if image file is too large.
-  // Large images (> 500 KB) dramatically increase Supabase Cached Egress because
-  // every site visitor downloads them on each page load.
-  // Recommended max: 300 KB per image (WebP/JPEG compressed).
-  const FILE_SIZE_WARN_BYTES = 500 * 1024; // 500 KB
-  if (file.size > FILE_SIZE_WARN_BYTES) {
-    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+  // ── Step 1: Auto-compress via Canvas → WebP
+  const originalSizeKB = Math.round(file.size / 1024);
+  let uploadFile = file;
+
+  try {
+    const submitBtn = document.querySelector('#uploadForm button[type="submit"]');
+    if (submitBtn) submitBtn.innerText = "Compressing image…";
+
+    uploadFile = await compressImageToWebP(file);
+
+    const compressedSizeKB = Math.round(uploadFile.size / 1024);
+    const savedPct = Math.round((1 - uploadFile.size / file.size) * 100);
+
+    // Show compression result to admin
+    if (originalSizeKB !== compressedSizeKB) {
+      console.log(
+        `🗜️ Image compressed: ${originalSizeKB} KB → ${compressedSizeKB} KB` +
+        ` (saved ${savedPct}%, type: ${uploadFile.type})`
+      );
+    }
+
+    if (submitBtn) submitBtn.innerText = "Uploading…";
+  } catch (compressErr) {
+    console.warn("Compression step failed, uploading original:", compressErr);
+    uploadFile = file; // Safe fallback
+  }
+
+  // ── Step 2: Final safety check — warn if still > 500 KB after compression
+  const FILE_SIZE_WARN_BYTES = 500 * 1024;
+  if (uploadFile.size > FILE_SIZE_WARN_BYTES) {
+    const sizeMB = (uploadFile.size / (1024 * 1024)).toFixed(2);
     const proceed = confirm(
-      `⚠️ Supabase Bandwidth Warning\n\n` +
-      `This image is ${sizeMB} MB.\n\n` +
-      `Large images increase Supabase Storage bandwidth (egress). With many visitors, ` +
-      `a ${sizeMB} MB image can consume hundreds of MB to GBs of your 5 GB free quota.\n\n` +
-      `✅ Recommended: Compress to < 300 KB using WebP format before uploading.\n` +
-      `   Free tools: squoosh.app, tinypng.com, or use your phone's photo editor.\n\n` +
-      `Proceed anyway with this ${sizeMB} MB image?`
+      `⚠️ Image still ${sizeMB} MB after compression.\n\n` +
+      `This is larger than recommended (< 500 KB).\n` +
+      `Consider manually compressing at squoosh.app before uploading.\n\n` +
+      `Proceed anyway?`
     );
     if (!proceed) {
-      throw new Error(`Upload cancelled. Please compress the image below 300 KB before uploading to reduce Supabase bandwidth usage.`);
+      throw new Error("Upload cancelled — please compress the image further.");
     }
   }
 
-  const fileExt = file.name.split(".").pop();
-  const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+  // ── Step 3: Upload to Supabase Storage with 1-year CDN cache TTL
+  const ext = uploadFile.type === "image/webp" ? "webp"
+             : uploadFile.type === "image/jpeg" ? "jpg"
+             : uploadFile.type === "image/png"  ? "png"
+             : uploadFile.name.split(".").pop() || "jpg";
+
+  const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
   const filePath = fileName;
 
-  // Use 1-year cache-control so browsers and CDN cache these images long-term,
-  // dramatically reducing repeated Supabase cached egress.
   const { data, error } = await supabaseClient.storage
     .from("images")
-    .upload(filePath, file, {
-      cacheControl: "31536000", // 1 year (was 3600 = 1 hour)
+    .upload(filePath, uploadFile, {
+      cacheControl: "31536000", // 1 year — dramatically reduces Supabase cached egress
       upsert: false,
+      contentType: uploadFile.type,
     });
 
   if (error) {
@@ -1314,13 +1420,14 @@ async function uploadImageToStorage(file) {
     throw new Error("Image upload failed: " + error.message);
   }
 
-  // Get public URL
+  // ── Step 4: Return public URL
   const { data: urlData } = supabaseClient.storage
     .from("images")
     .getPublicUrl(data.path);
 
   return urlData.publicUrl;
 }
+
 
 // ============================================================
 // Admin Upload Handler (Supabase insert/update)
