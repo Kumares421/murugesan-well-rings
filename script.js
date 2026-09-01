@@ -552,7 +552,7 @@ async function loadDynamicContent(forceRefresh) {
 
       card.innerHTML = `
         <div class="material-img-wrapper">
-          <img src="${itemImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy" onerror="this.onerror=null; this.src='logo.png';">
+          <img src="${itemImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='logo.png';">
           <span class="material-tag">${item.tag || item.meta}</span>
         </div>
         <div class="material-details">
@@ -593,7 +593,7 @@ async function loadDynamicContent(forceRefresh) {
       const itemImgUrl = resolveProductImage(item);
       card.innerHTML = `
         <div class="material-img-wrapper">
-          <img src="${itemImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy" onerror="this.onerror=null; this.src='logo.png';">
+          <img src="${itemImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='logo.png';">
         </div>
         <div class="project-info" style="padding: 20px 15px;">
           <span class="project-location"><i class="fas fa-map-marker-alt"></i> ${item.meta}</span>
@@ -613,7 +613,7 @@ async function loadDynamicContent(forceRefresh) {
       const itemImgUrl = resolveProductImage(item);
       card.innerHTML = `
         <div class="material-img-wrapper">
-          <img src="${itemImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy" onerror="this.onerror=null; this.src='logo.png';">
+          <img src="${itemImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='logo.png';">
         </div>
         <div style="padding: 20px 15px;">
           <h3>${item.title}</h3>
@@ -630,11 +630,13 @@ async function loadDynamicContent(forceRefresh) {
     slideshows = _dynamicCache.slideshows;
   } else {
     try {
-      // Only fetch the columns we need — reduces data transfer
+      // Fetch only needed columns; limit to 8 slides to cap Supabase Storage egress.
+      // Each additional slide with a Supabase Storage URL adds to bandwidth on every visit.
       const { data, error } = await supabaseClient
         .from("slideshow")
         .select("id,title,img_url")
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: true })
+        .limit(8);
       if (!error) {
         slideshows = data || [];
         _dynamicCache.slideshows = slideshows;
@@ -1119,9 +1121,17 @@ window.deleteEntry = async function (table, id) {
 // Edit Entry (load into form)
 // ============================================================
 window.editEntry = async function (table, id) {
+  // Fetch only the columns we populate in the edit form — avoids pulling unused data
+  const editSelectMap = {
+    materials: "id,title,desc,meta,img_url,category,price,icon,tag",
+    projects:  "id,title,desc,meta,img_url",
+    services:  "id,title,desc,meta,img_url",
+    slideshow: "id,title,img_url",
+  };
+  const selectCols = editSelectMap[table] || "id,title,desc,meta,img_url,category,price";
   const { data: item, error } = await supabaseClient
     .from(table)
-    .select("*")
+    .select(selectCols)
     .eq("id", id)
     .single();
   if (error || !item) {
@@ -1258,6 +1268,27 @@ window.seedDefaultSlides = async function () {
 // Upload Image to Supabase Storage
 // ============================================================
 async function uploadImageToStorage(file) {
+  // ── Egress guard: warn admin if image file is too large.
+  // Large images (> 500 KB) dramatically increase Supabase Cached Egress because
+  // every site visitor downloads them on each page load.
+  // Recommended max: 300 KB per image (WebP/JPEG compressed).
+  const FILE_SIZE_WARN_BYTES = 500 * 1024; // 500 KB
+  if (file.size > FILE_SIZE_WARN_BYTES) {
+    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    const proceed = confirm(
+      `⚠️ Supabase Bandwidth Warning\n\n` +
+      `This image is ${sizeMB} MB.\n\n` +
+      `Large images increase Supabase Storage bandwidth (egress). With many visitors, ` +
+      `a ${sizeMB} MB image can consume hundreds of MB to GBs of your 5 GB free quota.\n\n` +
+      `✅ Recommended: Compress to < 300 KB using WebP format before uploading.\n` +
+      `   Free tools: squoosh.app, tinypng.com, or use your phone's photo editor.\n\n` +
+      `Proceed anyway with this ${sizeMB} MB image?`
+    );
+    if (!proceed) {
+      throw new Error(`Upload cancelled. Please compress the image below 300 KB before uploading to reduce Supabase bandwidth usage.`);
+    }
+  }
+
   const fileExt = file.name.split(".").pop();
   const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
   const filePath = fileName;
@@ -1720,9 +1751,11 @@ async function syncCustomerSessionToCloud() {
 async function loadCustomerSessionFromCloud(email) {
   if (!email) return;
   try {
+    // Select only the columns we actually use — avoids fetching extra data.
+    // In particular avoids fetching large JSONB fields if schema grows later.
     const { data, error } = await supabaseClient
       .from("customer_profiles")
-      .select("*")
+      .select("email,name,phone,place,photo,cart")
       .eq("email", email.toLowerCase())
       .maybeSingle();
 
