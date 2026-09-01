@@ -1403,7 +1403,7 @@ async function uploadImageToStorage(file) {
   const { data, error } = await supabaseClient.storage
     .from("images")
     .upload(filePath, uploadFile, {
-      cacheControl: "31536000", // 1 year — dramatically reduces Supabase cached egress
+      cacheControl: "max-age=31536000, immutable", // 1 year + immutable — ensures long-term browser/CDN caching without revalidation egress
       upsert: false,
       contentType: uploadFile.type,
     });
