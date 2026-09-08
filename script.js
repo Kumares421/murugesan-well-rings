@@ -27,16 +27,48 @@ const AUTHORIZED_EMAILS = [
   "kumaresan.ai.421@gmail.com",
 ];
 
-// Safe helper to resolve product image URLs with fallbacks for missing/invalid database entries
+// ── Supabase Storage host (used to detect remote storage URLs) ──────────────
+const SUPABASE_STORAGE_HOST = "sedebhmfreuasjnnsjzn.supabase.co";
+
+/**
+ * Resolve the best local image for an item, falling back through:
+ *   1. title-based heuristic → local slide webp  (when Supabase Storage URL detected)
+ *   2. local filename in img_url
+ *   3. non-storage http/https URL (e.g., external CDN)
+ *   4. title-heuristic for empty/unknown urls
+ *
+ * This prevents broken images when Supabase Storage egress quota is exceeded.
+ */
 function resolveProductImage(item) {
   let url = (item && item.img_url) ? String(item.img_url).trim() : "";
+  const title = ((item && item.title) || "").toLowerCase();
 
-  // Valid HTTP/HTTPS or base64 data URLs
-  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
-    return url;
+  // ── Title-based local image heuristic (shared by multiple paths below) ──
+  function localImageFromTitle() {
+    if (title.includes("4ft") || title.includes("4 ft")) return "slide1.webp";
+    if (title.includes("3ft") || title.includes("3 ft")) return "slide2.webp";
+    if (title.includes("2ft") || title.includes("2 ft")) return "slide3.webp";
+    if (title.includes("fence") || title.includes("post")) return "slide5.webp";
+    if (title.includes("cover")) return "slide6.webp";
+    if (title.includes("digging") || title.includes("well") || title.includes("sinking") || title.includes("residential") || title.includes("drainage")) return "slide7.webp";
+    return "slide4.webp"; // generic concrete/rings image
   }
 
-  // Known local slide / asset files
+  // ── Supabase Storage URL → prefer local fallback (egress may be exceeded) ──
+  if (url.includes(SUPABASE_STORAGE_HOST)) {
+    const local = localImageFromTitle();
+    // Only use local if we could make a meaningful match; otherwise keep remote
+    // ("slide4.webp" is the generic fallback — always prefer that over broken remote)
+    return local;
+  }
+
+  // ── base64 data URLs — use as-is ──────────────────────────────────────────
+  if (url.startsWith("data:")) return url;
+
+  // ── Non-Supabase http/https URL (external CDN etc.) — use as-is ──────────
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+
+  // ── Known local slide / asset filenames ──────────────────────────────────
   if (/^slide[1-7]\.(png|jpg|jpeg|webp)$/i.test(url)) {
     return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
   }
@@ -44,21 +76,13 @@ function resolveProductImage(item) {
     return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
   }
 
-  // Other valid image filenames
+  // ── Other local image filenames ───────────────────────────────────────────
   if (/\.(png|jpg|jpeg|webp|gif|svg)$/i.test(url)) {
     return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
   }
 
-  // Title-based fallback heuristics if img_url is empty, invalid, or non-image text
-  const title = ((item && item.title) || "").toLowerCase();
-  if (title.includes("4ft") || title.includes("4 ft")) return "slide1.webp";
-  if (title.includes("3ft") || title.includes("3 ft")) return "slide2.webp";
-  if (title.includes("2ft") || title.includes("2 ft")) return "slide3.webp";
-  if (title.includes("fence") || title.includes("post")) return "slide5.webp";
-  if (title.includes("cover")) return "slide6.webp";
-  if (title.includes("digging") || title.includes("well") || title.includes("sinking") || title.includes("residential") || title.includes("drainage")) return "slide7.webp";
-
-  return "slide1.webp";
+  // ── Empty / unrecognised → title heuristic ────────────────────────────────
+  return localImageFromTitle();
 }
 
 // ============================================================
@@ -668,19 +692,21 @@ async function loadDynamicContent(forceRefresh) {
     const existingDynamic = slideshowTrack.querySelectorAll('.slideshow-img:not(:nth-child(1)):not(:nth-child(2))');
     existingDynamic.forEach(el => el.remove());
 
-    // Append custom dynamic slides after the 2 static ones
+    // Append custom dynamic slides after the 2 static ones.
+    // resolveProductImage handles Supabase Storage egress fallback to local webp.
     slideshows.forEach((slide) => {
       const slideDiv = document.createElement('div');
       slideDiv.className = 'slideshow-img';
       const img = document.createElement('img');
-      img.src = slide.img_url
-        ? slide.img_url.replace(/\.(png|jpg|jpeg)$/i, '.webp')
-        : (slide.img_url || 'slide3.webp');
+      const resolvedSrc = resolveProductImage(slide);
+      img.src = resolvedSrc;
       img.alt = slide.title || 'Well Ring Slide';
       img.loading = 'lazy';
       img.width = 560;
       img.height = 420;
       img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+      // Extra safety: if even the resolved local image fails, fall back to slide4
+      img.onerror = function() { this.onerror = null; this.src = 'slide4.webp'; };
       slideDiv.appendChild(img);
       slideshowTrack.appendChild(slideDiv);
     });
