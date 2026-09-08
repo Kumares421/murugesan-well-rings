@@ -27,48 +27,23 @@ const AUTHORIZED_EMAILS = [
   "kumaresan.ai.421@gmail.com",
 ];
 
-// ── Supabase Storage host (used to detect remote storage URLs) ──────────────
+// ── Supabase Storage host constant ──────────────────────────────────────────
 const SUPABASE_STORAGE_HOST = "sedebhmfreuasjnnsjzn.supabase.co";
 
 /**
- * Resolve the best local image for an item, falling back through:
- *   1. title-based heuristic → local slide webp  (when Supabase Storage URL detected)
- *   2. local filename in img_url
- *   3. non-storage http/https URL (e.g., external CDN)
- *   4. title-heuristic for empty/unknown urls
- *
- * This prevents broken images when Supabase Storage egress quota is exceeded.
+ * Resolve the primary src URL for a product image.
+ * Supabase Storage URLs are used AS-IS so real product photos always show.
+ * Use localFallbackForItem(item) to get a local slide for onerror handlers.
  */
 function resolveProductImage(item) {
   let url = (item && item.img_url) ? String(item.img_url).trim() : "";
-  const title = ((item && item.title) || "").toLowerCase();
 
-  // ── Title-based local image heuristic (shared by multiple paths below) ──
-  function localImageFromTitle() {
-    if (title.includes("4ft") || title.includes("4 ft")) return "slide1.webp";
-    if (title.includes("3ft") || title.includes("3 ft")) return "slide2.webp";
-    if (title.includes("2ft") || title.includes("2 ft")) return "slide3.webp";
-    if (title.includes("fence") || title.includes("post")) return "slide5.webp";
-    if (title.includes("cover")) return "slide6.webp";
-    if (title.includes("digging") || title.includes("well") || title.includes("sinking") || title.includes("residential") || title.includes("drainage")) return "slide7.webp";
-    return "slide4.webp"; // generic concrete/rings image
+  // Any http/https URL (including Supabase Storage) — use as primary src
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
+    return url;
   }
 
-  // ── Supabase Storage URL → prefer local fallback (egress may be exceeded) ──
-  if (url.includes(SUPABASE_STORAGE_HOST)) {
-    const local = localImageFromTitle();
-    // Only use local if we could make a meaningful match; otherwise keep remote
-    // ("slide4.webp" is the generic fallback — always prefer that over broken remote)
-    return local;
-  }
-
-  // ── base64 data URLs — use as-is ──────────────────────────────────────────
-  if (url.startsWith("data:")) return url;
-
-  // ── Non-Supabase http/https URL (external CDN etc.) — use as-is ──────────
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-
-  // ── Known local slide / asset filenames ──────────────────────────────────
+  // Known local slide / asset files
   if (/^slide[1-7]\.(png|jpg|jpeg|webp)$/i.test(url)) {
     return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
   }
@@ -76,13 +51,31 @@ function resolveProductImage(item) {
     return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
   }
 
-  // ── Other local image filenames ───────────────────────────────────────────
+  // Other local image filenames
   if (/\.(png|jpg|jpeg|webp|gif|svg)$/i.test(url)) {
     return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
   }
 
-  // ── Empty / unrecognised → title heuristic ────────────────────────────────
-  return localImageFromTitle();
+  // Empty / unrecognised — pick a local slide by title
+  return localFallbackForItem(item);
+}
+
+/**
+ * Returns a local slide*.webp fallback chosen by item title.
+ * Used in onerror handlers so the real image is tried first;
+ * only if it fails (e.g. Supabase Storage blocked) do we show this.
+ */
+function localFallbackForItem(item) {
+  const title = ((item && item.title) || "").toLowerCase();
+  if (title.includes("4ft") || title.includes("4 ft")) return "slide1.webp";
+  if (title.includes("3ft") || title.includes("3 ft")) return "slide2.webp";
+  if (title.includes("2ft") || title.includes("2 ft")) return "slide3.webp";
+  if (title.includes("fence") || title.includes("post")) return "slide5.webp";
+  if (title.includes("cover")) return "slide6.webp";
+  if (title.includes("digging") || title.includes("well") ||
+      title.includes("sinking") || title.includes("residential") ||
+      title.includes("drainage")) return "slide7.webp";
+  return "slide4.webp";
 }
 
 // ============================================================
@@ -574,9 +567,10 @@ async function loadDynamicContent(forceRefresh) {
 
       const itemImgUrl = resolveProductImage(item);
 
+      const localFb = localFallbackForItem(item);
       card.innerHTML = `
         <div class="material-img-wrapper">
-          <img src="${itemImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='logo.png';">
+          <img src="${itemImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='${localFb}';">
           <span class="material-tag">${item.tag || item.meta}</span>
         </div>
         <div class="material-details">
@@ -614,10 +608,11 @@ async function loadDynamicContent(forceRefresh) {
     projects.forEach((item) => {
       const card = document.createElement("div");
       card.className = "glass-card project-card";
-      const itemImgUrl = resolveProductImage(item);
+      const projImgUrl = resolveProductImage(item);
+      const projFb = localFallbackForItem(item);
       card.innerHTML = `
         <div class="material-img-wrapper">
-          <img src="${itemImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='logo.png';">
+          <img src="${projImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='${projFb}';">
         </div>
         <div class="project-info" style="padding: 20px 15px;">
           <span class="project-location"><i class="fas fa-map-marker-alt"></i> ${item.meta}</span>
@@ -634,10 +629,11 @@ async function loadDynamicContent(forceRefresh) {
     services.forEach((item) => {
       const card = document.createElement("div");
       card.className = "glass-card service-card";
-      const itemImgUrl = resolveProductImage(item);
+      const svcImgUrl = resolveProductImage(item);
+      const svcFb = localFallbackForItem(item);
       card.innerHTML = `
         <div class="material-img-wrapper">
-          <img src="${itemImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='logo.png';">
+          <img src="${svcImgUrl}" alt="${item.title}" class="card-image" width="400" height="300" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='${svcFb}';">
         </div>
         <div style="padding: 20px 15px;">
           <h3>${item.title}</h3>
