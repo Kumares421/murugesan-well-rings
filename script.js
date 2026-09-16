@@ -43,10 +43,7 @@ function resolveProductImage(item) {
     return url;
   }
 
-  // Known local slide / asset files
-  if (/^slide[1-7]\.(png|jpg|jpeg|webp)$/i.test(url)) {
-    return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
-  }
+  // Known local asset files (logo, about-bg)
   if (/^logo\.(png|jpg|jpeg|webp)$/i.test(url) || /^about-bg\.(png|jpg|jpeg|webp)$/i.test(url)) {
     return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
   }
@@ -56,26 +53,16 @@ function resolveProductImage(item) {
     return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
   }
 
-  // Empty / unrecognised — pick a local slide by title
+  // Empty / unrecognised — return empty (no local slide fallbacks)
   return localFallbackForItem(item);
 }
 
 /**
- * Returns a local slide*.webp fallback chosen by item title.
- * Used in onerror handlers so the real image is tried first;
- * only if it fails (e.g. Supabase Storage blocked) do we show this.
+ * Returns an empty string — local slide fallbacks have been removed.
+ * Slides must be uploaded via the admin panel.
  */
 function localFallbackForItem(item) {
-  const title = ((item && item.title) || "").toLowerCase();
-  if (title.includes("4ft") || title.includes("4 ft")) return "slide1.webp";
-  if (title.includes("3ft") || title.includes("3 ft")) return "slide2.webp";
-  if (title.includes("2ft") || title.includes("2 ft")) return "slide3.webp";
-  if (title.includes("fence") || title.includes("post")) return "slide5.webp";
-  if (title.includes("cover")) return "slide6.webp";
-  if (title.includes("digging") || title.includes("well") ||
-      title.includes("sinking") || title.includes("residential") ||
-      title.includes("drainage")) return "slide7.webp";
-  return "slide4.webp";
+  return "";
 }
 
 // ============================================================
@@ -429,7 +416,7 @@ async function loadDynamicContent(forceRefresh) {
         meta: "4ft outerDia / 11 inch height / 1.5 inch thickness",
         tag: "4ft outerDia / 11 inch height / 1.5 inch thickness",
         icon: "fas fa-info-circle",
-        img_url: "slide1.webp",
+        img_url: "logo.webp",
         category: "materials-only",
         price: 500,
       },
@@ -440,7 +427,7 @@ async function loadDynamicContent(forceRefresh) {
         meta: "3ft outerDia / 11 inch height / 1.5 inch thickness",
         tag: "3ft outerDia / 11 inch height / 1.5 inch thickness",
         icon: "fas fa-info-circle",
-        img_url: "slide2.webp",
+        img_url: "logo.webp",
         category: "materials-only",
         price: 500,
       },
@@ -451,7 +438,7 @@ async function loadDynamicContent(forceRefresh) {
         meta: "2 ft outerDia / 11 inch height / 1.5 inch thickness",
         tag: "2 ft outerDia / 11 inch height / 1.5 inch thickness",
         icon: "fas fa-info-circle",
-        img_url: "slide3.webp",
+        img_url: "logo.webp",
         category: "materials-only",
         price: 500,
       },
@@ -666,14 +653,15 @@ async function loadDynamicContent(forceRefresh) {
     }
   }
 
-  // Fallback to static slides if database is empty or errors
+  // Local slide images — shown when Supabase slideshow table is empty
   if (slideshows.length === 0) {
     slideshows = [
-      { id: "default3", title: "Concrete Well Rings Yard",         img_url: "slide3.webp" },
-      { id: "default4", title: "Reinforced Concrete Rings Stack",   img_url: "slide4.webp" },
-      { id: "default5", title: "Concrete Fencing Posts",            img_url: "slide5.webp" },
-      { id: "default6", title: "Concrete Well Covers",              img_url: "slide6.webp" },
-      { id: "default7", title: "Deep Well Sinking Site",            img_url: "slide7.webp" },
+      { id: "local1", title: "RCC Concrete Well Ring",          img_url: "slide1.jpg" },
+      { id: "local2", title: "Concrete Fencing Posts",           img_url: "slide2.jpg" },
+      { id: "local3", title: "Concrete Well Covers",             img_url: "slide3.jpg" },
+      { id: "local4", title: "Murugesan Well Rings - Stock",     img_url: "slide4.jpg" },
+      { id: "local5", title: "Yuvaraj Cement Works",             img_url: "slide5.jpg" },
+      { id: "local6", title: "Well Sinking - Site Work",         img_url: "slide6.jpg" },
     ];
   }
 
@@ -681,15 +669,10 @@ async function loadDynamicContent(forceRefresh) {
   const slideshowDots = document.getElementById("slideshowDots");
 
   if (slideshowTrack && slideshowDots) {
-    // IMPORTANT: Do NOT reset slideshowTrack.innerHTML — the first 2 static slides
-    // (slide1.webp LCP + slide2.webp) are already rendered in HTML. Resetting them
-    // would destroy the painted LCP element and cause CLS/LCP regression.
-    // Instead, remove only previously appended dynamic slides (those without id).
-    const existingDynamic = slideshowTrack.querySelectorAll('.slideshow-img:not(:nth-child(1)):not(:nth-child(2))');
-    existingDynamic.forEach(el => el.remove());
+    // Clear existing slides and rebuild entirely from DB
+    slideshowTrack.innerHTML = '';
 
-    // Append custom dynamic slides after the 2 static ones.
-    // resolveProductImage handles Supabase Storage egress fallback to local webp.
+    // Append slides from Supabase. resolveProductImage handles URL resolution.
     slideshows.forEach((slide) => {
       const slideDiv = document.createElement('div');
       slideDiv.className = 'slideshow-img';
@@ -701,15 +684,19 @@ async function loadDynamicContent(forceRefresh) {
       img.width = 560;
       img.height = 420;
       img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
-      // Extra safety: if even the resolved local image fails, fall back to slide4
-      img.onerror = function() { this.onerror = null; this.src = 'slide4.webp'; };
+      // Extra safety: if image fails to load, fall back to logo
+      img.onerror = function() { this.onerror = null; this.src = 'logo.webp'; };
       slideDiv.appendChild(img);
       slideshowTrack.appendChild(slideDiv);
     });
 
+    // Mark first slide active
+    const firstSlide = slideshowTrack.querySelector('.slideshow-img');
+    if (firstSlide) firstSlide.classList.add('active');
+
     // Generate indicator dots
     slideshowDots.innerHTML = '';
-    const totalSlides = 2 + slideshows.length;
+    const totalSlides = slideshows.length;
     for (let i = 0; i < totalSlides; i++) {
       const dot = document.createElement('span');
       dot.className = i === 0 ? 'dot active' : 'dot';

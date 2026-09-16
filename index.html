@@ -39,8 +39,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
 
-  <!-- LCP image preload — hero slideshow first slide loads before body renders -->
-  <link rel="preload" as="image" href="slide1.webp" fetchpriority="high">
+  <!-- LCP image preload will be added dynamically once uploaded slide images are set -->
 
   <!-- Schema.org JSON-LD Structured Data for Google Local Search -->
   <script type="application/ld+json">
@@ -285,17 +284,9 @@
         <!-- Auto-sliding Photo Carousel — real WebP images for fast LCP -->
         <div class="hero-slideshow" id="heroSlideshow">
           <div class="slideshow-track" id="slideshowTrack">
-            <div class="slideshow-img active">
-              <img id="heroLcpImage" src="slide1.webp" alt="Murugesan Well Rings - RCC Concrete Well Ring" fetchpriority="high" width="560" height="420" style="width:100%;height:100%;object-fit:cover;display:block;">
-            </div>
-            <div class="slideshow-img">
-              <img src="slide2.webp" alt="Murugesan Well Rings - Concrete Fencing Post" loading="lazy" width="560" height="420" style="width:100%;height:100%;object-fit:cover;display:block;">
-            </div>
+            <!-- Slides are loaded dynamically from uploaded images -->
           </div>
-          <div class="slideshow-dots" id="slideshowDots">
-            <span class="dot active" data-index="0"></span>
-            <span class="dot" data-index="1"></span>
-          </div>
+          <div class="slideshow-dots" id="slideshowDots"></div>
         </div>
 
         <div class="glass-card hero-badge-card">
