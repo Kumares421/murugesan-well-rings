@@ -43,7 +43,12 @@ function resolveProductImage(item) {
     return url;
   }
 
-  // Known local asset files (logo, about-bg)
+  // Local slide images (slide1.jpg–slide6.jpg) — return as-is, no .webp conversion
+  if (/^slide\d+\.(jpg|jpeg|png|webp)$/i.test(url)) {
+    return url;
+  }
+
+  // Known local asset files (logo, about-bg) — convert to .webp
   if (/^logo\.(png|jpg|jpeg|webp)$/i.test(url) || /^about-bg\.(png|jpg|jpeg|webp)$/i.test(url)) {
     return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
   }
@@ -53,7 +58,7 @@ function resolveProductImage(item) {
     return url.replace(/\.(png|jpg|jpeg)$/i, ".webp");
   }
 
-  // Empty / unrecognised — return empty (no local slide fallbacks)
+  // Empty / unrecognised — return empty
   return localFallbackForItem(item);
 }
 
