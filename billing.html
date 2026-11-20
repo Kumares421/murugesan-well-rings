@@ -29,6 +29,16 @@
       --bill-red: #b91c1c;
     }
 
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden !important;
+    }
+
     body {
       font-family: 'Roboto', 'Noto Sans Tamil', 'Outfit', sans-serif;
       background-color: #f3f4f6;
@@ -38,42 +48,58 @@
       flex-direction: column;
       align-items: center;
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
 
     /* Full width wrapper for header */
     .site-header-wrapper {
       width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden;
     }
 
     .billing-content-container {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 24px 16px 60px 16px;
+      padding: 14px 8px 60px 8px;
       width: 100%;
+      max-width: 100%;
       box-sizing: border-box;
+      overflow-x: hidden;
     }
 
-    .top-bar {
+    #billingAppBody {
       width: 100%;
       max-width: 148mm;
       display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-sizing: border-box;
+    }
+
+    /* Action Buttons Bar */
+    .top-bar {
+      width: 100%;
+      display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 6px;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
     }
 
     .btn-group {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
+      align-items: center;
     }
 
     .btn-bill {
-      padding: 8px 14px;
-      font-size: 13px;
+      padding: 7px 11px;
+      font-size: 12px;
       font-weight: 700;
       border: none;
       border-radius: 6px;
@@ -81,8 +107,15 @@
       color: #fff;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      transition: opacity 0.2s;
+      justify-content: center;
+      gap: 5px;
+      transition: opacity 0.2s, transform 0.1s;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+
+    .btn-bill:active {
+      transform: scale(0.98);
     }
 
     .btn-bill:hover {
@@ -94,6 +127,35 @@
     .btn-wa { background-color: #25d366; color: #fff; }
     .btn-dl { background-color: #0284c7; color: #fff; }
     .btn-print { background-color: #b91c1c; }
+
+    /* Clean mobile 2-column action bar */
+    @media (max-width: 560px) {
+      .top-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        width: 100%;
+      }
+
+      .btn-group {
+        display: contents;
+      }
+
+      .btn-bill {
+        width: 100%;
+        padding: 8px 4px;
+        font-size: 11px;
+        text-align: center;
+        white-space: normal;
+        min-height: 36px;
+      }
+
+      #printBtn {
+        grid-column: 1 / -1;
+        padding: 9px;
+        font-size: 12.5px;
+      }
+    }
 
     /* Modal Backdrop for Image Share */
     .image-modal-backdrop {
@@ -163,23 +225,23 @@
       background: #ffffff;
       border: 1px solid #e5e7eb;
       border-radius: 8px;
-      padding: 8px 10px;
-      margin-bottom: 12px;
-      font-size: 12px;
+      padding: 7px 9px;
+      margin-bottom: 10px;
+      font-size: 11.5px;
       box-sizing: border-box;
     }
 
     .recent-label {
       font-weight: 700;
       color: #374151;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
       display: block;
     }
 
     .recent-chips {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 5px;
     }
 
     .chip {
@@ -187,8 +249,8 @@
       color: var(--bill-red);
       border: 1px solid #fca5a5;
       border-radius: 999px;
-      padding: 3px 10px;
-      font-size: 11.5px;
+      padding: 3px 8px;
+      font-size: 11px;
       font-weight: 700;
       cursor: pointer;
       transition: background 0.2s;
@@ -198,52 +260,80 @@
       background: #fee2e2;
     }
 
+    /* Bill Sheet (A5 proportion, responsive down to 320px) */
     .bill-sheet {
-      width: 148mm;
-      min-height: 210mm;
+      width: 100%;
+      max-width: 148mm;
+      min-height: auto;
       background: #ffffff;
-      padding: 6mm;
+      padding: 5mm 3.5mm;
       box-sizing: border-box;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+      margin: 0 auto;
+      border-radius: 6px;
+      overflow: hidden;
     }
 
     .bill-border {
       border: 2px solid var(--bill-red);
-      border-radius: 10px;
+      border-radius: 8px;
       height: 100%;
       display: flex;
       flex-direction: column;
       color: var(--bill-red);
       overflow: hidden;
       box-sizing: border-box;
+      width: 100%;
     }
 
     .header-top {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      padding: 8px 10px 0 10px;
-      font-size: 11.5px;
+      padding: 6px 8px 0 8px;
+      font-size: 11px;
       font-weight: 700;
+      box-sizing: border-box;
+      width: 100%;
     }
 
-    .prop-box { text-align: left; line-height: 1.3; }
-    .blessing-box { text-align: center; font-size: 11px; line-height: 1.25; }
-    .cell-box { text-align: right; line-height: 1.3; }
+    .prop-box {
+      text-align: left;
+      line-height: 1.25;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .blessing-box {
+      text-align: center;
+      font-size: 10px;
+      line-height: 1.2;
+      padding: 0 4px;
+      flex-shrink: 0;
+    }
+
+    .cell-box {
+      text-align: right;
+      line-height: 1.25;
+      flex: 1;
+      min-width: 0;
+    }
 
     .brand-row {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      padding: 6px 10px 2px 10px;
+      gap: 5px;
+      padding: 4px 8px 2px 8px;
       text-align: center;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .bill-mg-logo {
-      width: 52px;
-      height: 52px;
+      width: 46px;
+      height: 46px;
       object-fit: contain;
       display: block;
       margin: 0 auto;
@@ -251,31 +341,36 @@
 
     .company-name {
       text-align: center;
-      font-size: 21px;
+      font-size: 20px;
       font-weight: 900;
       line-height: 1.15;
     }
 
     .sub-details {
       text-align: center;
-      padding: 2px 8px 6px 8px;
-      font-size: 11px;
+      padding: 2px 6px 4px 6px;
+      font-size: 10.5px;
       font-weight: 700;
-      line-height: 1.35;
+      line-height: 1.3;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .website-link {
-      font-size: 11.5px;
+      font-size: 10.5px;
       font-weight: 800;
+      word-break: break-all;
     }
 
     .meta-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 4px 12px 6px 12px;
-      font-size: 12.5px;
+      padding: 3px 8px 4px 8px;
+      font-size: 12px;
       font-weight: 700;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .meta-row input {
@@ -283,26 +378,42 @@
       border-bottom: 1.5px dotted var(--bill-red);
       color: #111827;
       font-weight: 700;
-      font-size: 12.5px;
+      font-size: 12px;
       outline: none;
       background: transparent;
       font-family: inherit;
+      box-sizing: border-box;
     }
 
+    /* Hide number spinners across browsers */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none !important;
+      margin: 0 !important;
+    }
+    input[type=number] {
+      -moz-appearance: textfield !important;
+    }
+
+    /* Fixed Table Layout strictly avoids mobile horizontal overflow */
     table.bill-table {
-      width: 100%;
-      border-collapse: collapse;
+      width: 100% !important;
+      table-layout: fixed !important;
+      border-collapse: collapse !important;
       border-top: 2px solid var(--bill-red);
       border-bottom: 2px solid var(--bill-red);
+      box-sizing: border-box;
     }
 
     table.bill-table th,
     table.bill-table td {
       border-right: 1.5px solid var(--bill-red);
       border-bottom: 1px solid #fecaca;
-      padding: 4px 5px;
-      font-size: 11.5px;
+      padding: 3px 2px;
+      font-size: 11px;
       vertical-align: middle;
+      box-sizing: border-box;
+      overflow: hidden;
     }
 
     table.bill-table th:last-child,
@@ -314,42 +425,81 @@
       border-bottom: 1.5px solid var(--bill-red);
       text-align: center;
       font-weight: 800;
+      white-space: nowrap;
+      padding: 4px 2px;
     }
 
-    .col-no { width: 7%; text-align: center; }
-    .col-item { width: 45%; text-align: left; }
-    .col-pcs { width: 10%; text-align: center; }
-    .col-rate { width: 15%; text-align: right; }
-    .col-amt { width: 23%; text-align: right; }
+    /* Strict Column Widths adding up to 100% */
+    .col-no   { width: 8%  !important; text-align: center; }
+    .col-item { width: 44% !important; text-align: left; }
+    .col-pcs  { width: 11% !important; text-align: center; }
+    .col-rate { width: 16% !important; text-align: right; }
+    .col-amt  { width: 21% !important; text-align: right; }
 
     .item-cell-wrap {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .size-input {
-      width: 52px !important;
+      width: 36px !important;
+      min-width: 26px !important;
+      max-width: 42px !important;
+      flex-shrink: 0;
+      border: none !important;
       border-bottom: 1px dashed #9ca3af !important;
-      text-align: center;
-      font-weight: 700;
+      text-align: center !important;
+      font-weight: 700 !important;
+      font-size: 11px !important;
+      padding: 1px 0 !important;
+      background: transparent;
+      outline: none;
+      box-sizing: border-box;
+      color: #111827;
+      font-family: inherit;
     }
 
     .desc-input {
-      flex: 1;
-      min-width: 60px;
+      flex: 1 !important;
+      min-width: 0 !important;
+      width: 100% !important;
+      border: none !important;
+      outline: none !important;
+      font-size: 11px !important;
+      padding: 1px 2px !important;
+      background: transparent;
+      box-sizing: border-box;
+      color: #111827;
+      font-family: inherit;
     }
 
-    table.bill-table td input,
-    table.bill-table td select {
-      width: 100%;
-      border: none;
-      outline: none;
-      font-size: 11.5px;
-      color: #111827;
+    .pcs-input {
+      width: 100% !important;
+      border: none !important;
+      outline: none !important;
+      text-align: center !important;
+      font-size: 11px !important;
+      padding: 1px 0 !important;
       background: transparent;
-      font-family: inherit;
       box-sizing: border-box;
+      color: #111827;
+      font-family: inherit;
+    }
+
+    .rate-input {
+      width: 100% !important;
+      border: none !important;
+      outline: none !important;
+      text-align: right !important;
+      font-size: 11px !important;
+      padding: 1px 0 !important;
+      background: transparent;
+      box-sizing: border-box;
+      color: #111827;
+      font-family: inherit;
     }
 
     .amt-display {
@@ -358,7 +508,10 @@
       text-align: right;
       color: #111827;
       font-weight: 700;
-      font-size: 11.5px;
+      font-size: 11px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .adj-row td {
@@ -370,63 +523,158 @@
     .adj-controls {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 3px;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .sign-select {
-      width: 44px !important;
+      width: 32px !important;
+      min-width: 30px !important;
       font-weight: 800 !important;
       color: var(--bill-red) !important;
       border: 1px solid #fca5a5 !important;
       border-radius: 4px;
-      padding: 1px 2px;
+      padding: 1px 1px;
       background: #fff !important;
+      font-size: 11px !important;
+      outline: none;
+      flex-shrink: 0;
+    }
+
+    #adjLabel {
+      flex: 1 !important;
+      min-width: 0 !important;
+      border: none !important;
+      outline: none !important;
+      font-size: 11px !important;
+      padding: 1px 2px !important;
+      background: transparent;
+      box-sizing: border-box;
+      color: #111827;
+      font-family: inherit;
     }
 
     .grand-row td {
       border-top: 2px solid var(--bill-red);
       border-bottom: 2px solid var(--bill-red);
       font-weight: 900;
-      font-size: 13px;
+      font-size: 12.5px;
       background-color: #fef2f2;
+      padding: 5px 4px;
     }
 
     .footer-area {
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
-      padding: 10px 12px;
+      padding: 8px 10px;
       margin-top: auto;
+      gap: 8px;
+      box-sizing: border-box;
+      width: 100%;
     }
 
     .sig-box {
       text-align: left;
-      min-width: 180px;
+      flex: 1;
+      min-width: 0;
     }
 
     .sig-label {
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       display: block;
-      margin-bottom: 2px;
+      margin-bottom: 1px;
     }
 
     .sig-input {
       font-family: 'Allura', cursive !important;
-      font-size: 28px !important;
+      font-size: 24px !important;
       line-height: 1.1;
       color: #111827;
       border: none;
       border-bottom: 1px dotted var(--bill-red);
       background: transparent;
-      width: 190px;
+      width: 100%;
+      max-width: 150px;
       outline: none;
+      box-sizing: border-box;
     }
 
     .company-foot {
       text-align: right;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 800;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* Fine-tune for Mobile Screens (max-width: 540px) */
+    @media (max-width: 540px) {
+      .billing-content-container {
+        padding: 10px 5px 50px 5px !important;
+      }
+      .bill-sheet {
+        padding: 2.5mm 1.5mm !important;
+        border-radius: 4px !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+      }
+      .bill-border {
+        border-width: 1.5px !important;
+        border-radius: 6px !important;
+      }
+      .header-top {
+        padding: 4px 5px 0 5px !important;
+        font-size: 9px !important;
+      }
+      .prop-box { font-size: 8.5px !important; line-height: 1.2 !important; }
+      .blessing-box { font-size: 8px !important; line-height: 1.15 !important; }
+      .cell-box { font-size: 8.5px !important; line-height: 1.2 !important; }
+      .bill-mg-logo { width: 38px !important; height: 38px !important; }
+      .company-name { font-size: 16px !important; }
+      .sub-details { font-size: 8.5px !important; line-height: 1.25 !important; padding: 2px 4px !important; }
+      .website-link { font-size: 8.5px !important; }
+      .meta-row { padding: 2px 5px 4px 5px !important; font-size: 10px !important; }
+      .meta-row input { font-size: 10px !important; }
+      #billNoInput { width: 45px !important; }
+      #dateInput { width: 80px !important; }
+
+      table.bill-table th {
+        font-size: 9px !important;
+        padding: 3px 1px !important;
+      }
+      table.bill-table td {
+        font-size: 9px !important;
+        padding: 2px 1px !important;
+      }
+      .size-input {
+        width: 28px !important;
+        min-width: 22px !important;
+        font-size: 9px !important;
+      }
+      .desc-input, .pcs-input, .rate-input, .amt-display, #adjLabel {
+        font-size: 9px !important;
+      }
+      .sign-select {
+        width: 26px !important;
+        min-width: 24px !important;
+        font-size: 9.5px !important;
+      }
+      .grand-row td {
+        font-size: 10.5px !important;
+        padding: 4px 2px !important;
+      }
+      .footer-area {
+        padding: 5px 4px !important;
+      }
+      .sig-input {
+        font-size: 18px !important;
+        max-width: 105px !important;
+      }
+      .company-foot {
+        font-size: 9px !important;
+      }
     }
 
     /* Admin Auth Gate Card */
@@ -460,6 +708,7 @@
         background: none !important;
         padding: 0 !important;
         margin: 0 !important;
+        width: 100% !important;
       }
       .no-print,
       .site-header-wrapper,
@@ -468,19 +717,33 @@
       .top-bar,
       .recent-bar,
       .sign-select,
-      .mobile-menu-overlay {
+      .mobile-menu-overlay,
+      #adminAuthGate,
+      #imageShareModal {
         display: none !important;
       }
       .billing-content-container {
         padding: 0 !important;
         margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+      #billingAppBody {
+        width: 100% !important;
+        max-width: 148mm !important;
+        margin: 0 auto !important;
       }
       .bill-sheet {
         box-shadow: none !important;
-        width: 100% !important;
+        width: 148mm !important;
         max-width: 148mm !important;
-        padding: 3mm !important;
+        padding: 5mm !important;
         margin: 0 auto !important;
+        border-radius: 0 !important;
+      }
+      .bill-border {
+        border-width: 2px !important;
+        border-radius: 8px !important;
       }
       .bill-mg-logo {
         -webkit-print-color-adjust: exact !important;
@@ -932,6 +1195,7 @@
           useCORS: true,
           backgroundColor: '#ffffff',
           logging: false,
+          windowWidth: 1024,
           onclone: (clonedDoc) => {
             convertInputsToSpansInClone(clonedDoc);
           }
@@ -1019,6 +1283,7 @@
           useCORS: true,
           backgroundColor: '#ffffff',
           logging: false,
+          windowWidth: 1024,
           onclone: (clonedDoc) => {
             convertInputsToSpansInClone(clonedDoc);
           }
@@ -1042,6 +1307,11 @@
       if (!clonedSheet) return;
 
       clonedSheet.style.boxShadow = 'none';
+      clonedSheet.style.width = '148mm';
+      clonedSheet.style.maxWidth = '148mm';
+      clonedSheet.style.minWidth = '148mm';
+      clonedSheet.style.padding = '5.5mm 4mm';
+      clonedSheet.style.margin = '0 auto';
 
       // Bill No
       const origBillNo = document.getElementById('billNoInput');
