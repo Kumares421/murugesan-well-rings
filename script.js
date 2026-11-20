@@ -819,6 +819,16 @@ function updateAdminUI(user) {
     document.getElementById("adminManageSection") ||
     document.getElementById("googleSignInBtn")
   );
+  const isAuthorizedAdmin = !!(user && user.email && AUTHORIZED_EMAILS.some(e => e.toLowerCase() === user.email.toLowerCase()));
+
+  // Toggle admin-only navigation links across the entire site
+  document.querySelectorAll('.admin-only-nav').forEach(el => {
+    if (isAuthorizedAdmin) {
+      el.classList.remove('hidden');
+    } else {
+      el.classList.add('hidden');
+    }
+  });
 
   if (user) {
     // 1. Establish customer session for ANY Gmail account
@@ -858,7 +868,7 @@ function updateAdminUI(user) {
 
     // 2. Admin Portal specific permissions check (only on admin page)
     if (isAdminPage) {
-      if (AUTHORIZED_EMAILS.includes(user.email)) {
+      if (isAuthorizedAdmin) {
         if (googleSignInBtn) googleSignInBtn.classList.add("hidden");
         if (googleSignOutBtn) googleSignOutBtn.classList.remove("hidden");
         if (uploadForm) uploadForm.classList.remove("hidden");
@@ -877,6 +887,7 @@ function updateAdminUI(user) {
     if (googleSignOutBtn) googleSignOutBtn.classList.add("hidden");
     if (uploadForm) uploadForm.classList.add("hidden");
     if (adminManageSection) adminManageSection.classList.add("hidden");
+    document.querySelectorAll('.admin-only-nav').forEach(el => el.classList.add('hidden'));
   }
 }
 
@@ -901,6 +912,16 @@ function updateAdminUI(user) {
       ) {
         history.replaceState(null, "", window.location.pathname + "#profile");
       }
+    } else {
+      try {
+        const stored = localStorage.getItem("wellrings_customer");
+        if (stored) {
+          const cust = JSON.parse(stored);
+          if (cust && cust.email && cust.verified) {
+            updateAdminUI({ email: cust.email, user_metadata: { full_name: cust.name } });
+          }
+        }
+      } catch (e) {}
     }
   } catch (err) {
     console.error("Session check failed:", err);

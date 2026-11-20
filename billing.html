@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="ta">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M. Yuvaraj Cement Works - Printable Bill | Murugesan Well Rings</title>
+  <meta name="description"
+    content="Official Printable Cash Bill & Invoice Generator for M. Yuvaraj Cement Works / Murugesan Well Rings Avadi, Chennai.">
+  <meta name="robots" content="noindex, nofollow">
+
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Allura&family=Noto+Sans+Tamil:wght@500;700;800&family=Outfit:wght@400;600;700;800&family=Roboto:wght@500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Base site style for header/navbar -->
+  <link rel="stylesheet" href="style.css?v=15">
+
+  <style>
+    :root {
+      --bill-red: #b91c1c;
+    }
+
+    body {
+      font-family: 'Roboto', 'Noto Sans Tamil', 'Outfit', sans-serif;
+      background-color: #f3f4f6;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* Full width wrapper for header */
+    .site-header-wrapper {
+      width: 100%;
+    }
+
+    .billing-content-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 60px 16px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .top-bar {
+      width: 100%;
+      max-width: 148mm;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-bill {
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: opacity 0.2s;
+    }
+
+    .btn-bill:hover {
+      opacity: 0.9;
+    }
+
+    .btn-lang { background-color: #1d4ed8; }
+    .btn-add { background-color: #047857; }
+    .btn-wa { background-color: #25d366; color: #fff; }
+    .btn-print { background-color: #b91c1c; }
+
+    .recent-bar {
+      width: 100%;
+      max-width: 148mm;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      box-sizing: border-box;
+    }
+
+    .recent-label {
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .recent-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chip {
+      background: #fef2f2;
+      color: var(--bill-red);
+      border: 1px solid #fca5a5;
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .chip:hover {
+      background: #fee2e2;
+    }
+
+    .bill-sheet {
+      width: 148mm;
+      min-height: 210mm;
+      background: #ffffff;
+      padding: 6mm;
+      box-sizing: border-box;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+    }
+
+    .bill-border {
+      border: 2px solid var(--bill-red);
+      border-radius: 10px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      color: var(--bill-red);
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 8px 10px 0 10px;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+
+    .prop-box { text-align: left; line-height: 1.3; }
+    .blessing-box { text-align: center; font-size: 11px; line-height: 1.25; }
+    .cell-box { text-align: right; line-height: 1.3; }
+
+    .brand-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 6px 10px 2px 10px;
+      text-align: center;
+    }
+
+    .bill-mg-logo {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .company-name {
+      text-align: center;
+      font-size: 21px;
+      font-weight: 900;
+      line-height: 1.15;
+    }
+
+    .sub-details {
+      text-align: center;
+      padding: 2px 8px 6px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .website-link {
+      font-size: 11.5px;
+      font-weight: 800;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 12px 6px 12px;
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+
+    .meta-row input {
+      border: none;
+      border-bottom: 1.5px dotted var(--bill-red);
+      color: #111827;
+      font-weight: 700;
+      font-size: 12.5px;
+      outline: none;
+      background: transparent;
+      font-family: inherit;
+    }
+
+    table.bill-table {
+      width: 100%;
+      border-collapse: collapse;
+      border-top: 2px solid var(--bill-red);
+      border-bottom: 2px solid var(--bill-red);
+    }
+
+    table.bill-table th,
+    table.bill-table td {
+      border-right: 1.5px solid var(--bill-red);
+      border-bottom: 1px solid #fecaca;
+      padding: 4px 5px;
+      font-size: 11.5px;
+      vertical-align: middle;
+    }
+
+    table.bill-table th:last-child,
+    table.bill-table td:last-child {
+      border-right: none;
+    }
+
+    table.bill-table th {
+      border-bottom: 1.5px solid var(--bill-red);
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .col-no { width: 7%; text-align: center; }
+    .col-item { width: 45%; text-align: left; }
+    .col-pcs { width: 10%; text-align: center; }
+    .col-rate { width: 15%; text-align: right; }
+    .col-amt { width: 23%; text-align: right; }
+
+    .item-cell-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .size-input {
+      width: 52px !important;
+      border-bottom: 1px dashed #9ca3af !important;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .desc-input {
+      flex: 1;
+      min-width: 60px;
+    }
+
+    table.bill-table td input,
+    table.bill-table td select {
+      width: 100%;
+      border: none;
+      outline: none;
+      font-size: 11.5px;
+      color: #111827;
+      background: transparent;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+
+    .amt-display {
+      display: block;
+      width: 100%;
+      text-align: right;
+      color: #111827;
+      font-weight: 700;
+      font-size: 11.5px;
+    }
+
+    .adj-row td {
+      border-top: 1.5px solid var(--bill-red);
+      background-color: #fffafa;
+      font-weight: 700;
+    }
+
+    .adj-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sign-select {
+      width: 44px !important;
+      font-weight: 800 !important;
+      color: var(--bill-red) !important;
+      border: 1px solid #fca5a5 !important;
+      border-radius: 4px;
+      padding: 1px 2px;
+      background: #fff !important;
+    }
+
+    .grand-row td {
+      border-top: 2px solid var(--bill-red);
+      border-bottom: 2px solid var(--bill-red);
+      font-weight: 900;
+      font-size: 13px;
+      background-color: #fef2f2;
+    }
+
+    .footer-area {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 10px 12px;
+      margin-top: auto;
+    }
+
+    .sig-box {
+      text-align: left;
+      min-width: 180px;
+    }
+
+    .sig-label {
+      font-size: 11px;
+      font-weight: 700;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .sig-input {
+      font-family: 'Allura', cursive !important;
+      font-size: 28px !important;
+      line-height: 1.1;
+      color: #111827;
+      border: none;
+      border-bottom: 1px dotted var(--bill-red);
+      background: transparent;
+      width: 190px;
+      outline: none;
+    }
+
+    .company-foot {
+      text-align: right;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    /* Admin Auth Gate Card */
+    .admin-auth-gate {
+      max-width: 480px;
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 32px 24px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      margin-top: 40px;
+    }
+
+    .admin-auth-gate h2 {
+      font-size: 1.4rem;
+      margin: 12px 0 8px 0;
+      color: #111827;
+    }
+
+    .admin-auth-gate p {
+      font-size: 0.9rem;
+      color: #4b5563;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    @media print {
+      body {
+        background: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .no-print,
+      .site-header-wrapper,
+      .header,
+      .announcement-bar,
+      .top-bar,
+      .recent-bar,
+      .sign-select,
+      .mobile-menu-overlay {
+        display: none !important;
+      }
+      .billing-content-container {
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .bill-sheet {
+        box-shadow: none !important;
+        width: 100% !important;
+        max-width: 148mm !important;
+        padding: 3mm !important;
+        margin: 0 auto !important;
+      }
+      .bill-mg-logo {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .chip { display: none !important; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Site Announcement Bar (Navbar) -->
+  <div class="site-header-wrapper no-print">
+    <div class="announcement-bar" id="welcomeBar">
+      <div class="container welcome-container">
+        <span><span class="badge">Admin</span> Murugesan Well Rings - Official Bill & Invoice Generator</span>
+        <button class="close-welcome-btn" onclick="dismissWelcomeBar()"><i class="fas fa-times"></i></button>
+      </div>
+    </div>
+
+    <!-- Header & Navigation with Bill Generate next to Contact Us -->
+    <header class="header">
+      <div class="container nav-container">
+        <a href="index.html#home" class="logo-area">
+          <img src="logo.png" alt="Murugesan Well Rings Logo" class="site-logo">
+          <span class="logo-text">Murugesan<span class="highlight">WellRings</span></span>
+        </a>
+
+        <nav class="nav-menu" id="navMenu">
+          <a href="index.html#home" class="nav-link">Home</a>
+          <a href="index.html#about" class="nav-link">About & System Design</a>
+          <a href="index.html#materials" class="nav-link">Materials</a>
+          <a href="index.html#projects" class="nav-link">Projects</a>
+          <a href="index.html#services" class="nav-link">Services</a>
+          <a href="index.html#contact" class="nav-link">Contact Us</a>
+          <a href="billing.html" class="nav-link active" id="navBillGenerate"><i class="fas fa-file-invoice-dollar"></i> Bill Generate</a>
+          <a href="admin.html" class="nav-link admin-trigger"><i class="fas fa-user-cog"></i> Admin Portal</a>
+        </nav>
+
+        <div class="header-actions">
+          <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open Menu">
+            <i class="fas fa-bars"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+  </div>
+
+  <!-- Main Billing Area -->
+  <div class="billing-content-container">
+
+    <!-- Admin Access Guard (Shown if not logged in as admin) -->
+    <div id="adminAuthGate" class="admin-auth-gate no-print hidden">
+      <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; color: #b91c1c; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto;">
+        <i class="fas fa-lock"></i>
+      </div>
+      <h2>Admin Access Restricted</h2>
+      <p>The Bill Generator is restricted to authorized administrators. Please sign in with your authorized admin Gmail account to access the billing tool.</p>
+      <button id="gateGoogleSignInBtn" class="btn-bill btn-print" style="width: 100%; justify-content: center; padding: 12px; font-size: 14px;">
+        <i class="fab fa-google"></i> Sign in with Google
+      </button>
+      <div id="unauthAlert" class="hidden" style="margin-top: 14px; padding: 10px; background: #fee2e2; border-radius: 6px; color: #b91c1c; font-size: 12px; font-weight: 600;">
+        <i class="fas fa-exclamation-triangle"></i> This account is not authorized. Please switch to an admin account.
+      </div>
+    </div>
+
+    <!-- Authorized Billing App Interface -->
+    <div id="billingAppBody">
+
+      <!-- Action Buttons Bar -->
+      <div class="top-bar no-print">
+        <div class="btn-group">
+          <button class="btn-bill btn-lang" onclick="toggleLanguage()" id="langBtn">Switch to தமிழ்</button>
+          <button class="btn-bill btn-add" onclick="addItemRow()" id="addRowBtn">+ Add Row</button>
+          <button class="btn-bill btn-wa" onclick="shareWhatsApp()" id="waBtn"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+        </div>
+        <button class="btn-bill btn-print" onclick="window.print()" id="printBtn"><i class="fas fa-print"></i> Print Bill</button>
+      </div>
+
+      <!-- Quick Recent Keywords Chips -->
+      <div class="recent-bar no-print">
+        <span class="recent-label" data-en="Recent Text (Click to fill active/last row description):" data-ta="சமீபத்திய வார்த்தைகள் (கிளிக் செய்து விவரத்தில் சேர்க்கவும்):">
+          Recent Text (Click to fill active/last row description):
+        </span>
+        <div class="recent-chips" id="recentChips"></div>
+      </div>
+
+      <!-- A5 Printable Bill Sheet -->
+      <div class="bill-sheet">
+        <div class="bill-border">
+
+          <!-- Top Blessing & Phone Bar -->
+          <div class="header-top">
+            <div class="prop-box">
+              <span data-en="Prop.:" data-ta="உரிமையாளர் :">Prop.:</span><br />
+              <span data-en="G. Murugesan" data-ta="G. முருகேசன்">G. Murugesan</span>
+            </div>
+            <div class="blessing-box">
+              உ<br />
+              <span data-en="Sri Murugan Thunai" data-ta="ஸ்ரீ முருகன் துணை">Sri Murugan Thunai</span>
+            </div>
+            <div class="cell-box">
+              Cell : 9941595850<br />
+              6382132040<br />
+              8838135069
+            </div>
+          </div>
+
+          <!-- Centered Brand Logo & Company Name -->
+          <div class="brand-row">
+            <img src="logo.png" alt="Murugesan Well Rings Logo" class="bill-mg-logo" />
+            <div class="company-name" data-en="M. YUVARAJ<br>CEMENT WORKS" data-ta="M. யுவராஜ்<br>சிமெண்ட் ஒர்க்ஸ்">
+              M. YUVARAJ<br>CEMENT WORKS
+            </div>
+          </div>
+
+          <!-- Business Tagline & Avadi Address -->
+          <div class="sub-details">
+            <div data-en="Well Rings, Jali, Posts & Well Digging Done in the Best Manner."
+                 data-ta="உறை, ஜாலி, போஸ்ட் மற்றும் கிணறு சிறந்த முறையில் எடுத்துத்தரப்படும்.">
+              Well Rings, Jali, Posts & Well Digging Done in the Best Manner.
+            </div>
+            <div data-en="No. 67/1, Bharathiyar Street, Govarthanagiri, Chennai - 71."
+                 data-ta="நெ. 67/1, பாரதியார் தெரு, கோவர்த்தனகிரி, சென்னை - 71.">
+              No. 67/1, Bharathiyar Street, Govarthanagiri, Chennai - 71.
+            </div>
+            <div class="website-link">https://murugesan-well-rings.vercel.app</div>
+          </div>
+
+          <!-- Bill No & Date Row -->
+          <div class="meta-row">
+            <div>
+              <span data-en="Bill No:" data-ta="பில் நெ.:">Bill No:</span>
+              <input type="text" id="billNoInput" value="185" style="width: 70px; font-size: 14px;" />
+            </div>
+            <div>
+              <span data-en="Date:" data-ta="தேதி:">Date:</span>
+              <input type="text" id="dateInput" style="width: 115px;" />
+            </div>
+          </div>
+
+          <!-- Customer Name / Site Row -->
+          <div class="meta-row" style="padding-top: 0; padding-bottom: 8px;">
+            <div style="width: 100%; display: flex; align-items: center; gap: 6px;">
+              <span data-en="To:" data-ta="பெயர் / முகவரி:">To:</span>
+              <input type="text" id="custNameInput" placeholder="Customer Name / Site / Mobile" style="flex: 1;" />
+            </div>
+          </div>
+
+          <!-- Line Items Table -->
+          <table class="bill-table">
+            <thead>
+              <tr>
+                <th class="col-no" data-en="No" data-ta="எண்">No</th>
+                <th class="col-item" data-en="Size & Particulars" data-ta="அளவு & விவரம்">Size & Particulars</th>
+                <th class="col-pcs" data-en="Pcs" data-ta="எண். (Pcs)">Pcs</th>
+                <th class="col-rate" data-en="1pc Rate" data-ta="1 பீஸ் விலை">1pc Rate</th>
+                <th class="col-amt" data-en="Amount" data-ta="தொகை">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="itemsBody"></tbody>
+            <tfoot>
+              <tr class="adj-row">
+                <td colspan="2">
+                  <div class="adj-controls">
+                    <select id="adjSign" class="sign-select" onchange="recalculateAll()">
+                      <option value="-">-</option>
+                      <option value="+">+</option>
+                    </select>
+                    <input type="text" id="adjLabel" placeholder="Advance / Other" />
+                  </div>
+                </td>
+                <td colspan="2" style="text-align: right;" data-en="Adj. Rate" data-ta="சரிசெய்தல்">Adj. Rate</td>
+                <td>
+                  <input type="number" step="0.01" id="adjAmountInput" placeholder="0.00" oninput="recalculateAll()" style="text-align:right; font-weight:700;" />
+                  <span class="amt-display" id="adjFormatted" style="font-size:10.5px; color:#b91c1c;">- 0.00</span>
+                </td>
+              </tr>
+              <tr class="grand-row">
+                <td colspan="3" style="text-align: right;" data-en="Grand Total" data-ta="மொத்தத் தொகை (Grand Total)">
+                  Grand Total
+                </td>
+                <td colspan="2" style="text-align: right;" id="grandTotalDisplay">0.00</td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <!-- Signature & Footer -->
+          <div class="footer-area">
+            <div class="sig-box">
+              <span class="sig-label" data-en="Signature:" data-ta="கையொப்பம்:">Signature:</span>
+              <input type="text" class="sig-input" value="G. Murugesan" placeholder="G. Murugesan" />
+            </div>
+            <div class="company-foot" data-en="M. Yuvaraj Cement Works" data-ta="M. யுவராஜ் சிமெண்ட் ஒர்க்ஸ்">
+              M. Yuvaraj Cement Works
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="script.js?v=15"></script>
+  <script>
+    // ============================================================
+    // Admin Authorization Guard
+    // ============================================================
+    const AUTHORIZED_ADMINS = [
+      'murugesan13081978@gmail.com',
+      'murugesankumaresan00@gmail.com'
+    ];
+
+    function verifyBillingAccess() {
+      const gate = document.getElementById('adminAuthGate');
+      const body = document.getElementById('billingAppBody');
+      const unauthAlert = document.getElementById('unauthAlert');
+
+      // 1. Check local customer session first for immediate rendering
+      try {
+        const stored = localStorage.getItem('wellrings_customer');
+        if (stored) {
+          const cust = JSON.parse(stored);
+          if (cust && cust.email && AUTHORIZED_ADMINS.some(e => e.toLowerCase() === cust.email.toLowerCase())) {
+            gate.classList.add('hidden');
+            body.classList.remove('hidden');
+            return;
+          }
+        }
+      } catch (e) {}
+
+      // 2. Check Supabase session
+      if (window.supabaseClient) {
+        window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
+          handleAuthSession(session?.user || null);
+        });
+
+        window.supabaseClient.auth.onAuthStateChange((_event, session) => {
+          handleAuthSession(session?.user || null);
+        });
+      }
+
+      function handleAuthSession(user) {
+        if (!user) {
+          gate.classList.remove('hidden');
+          body.classList.add('hidden');
+          unauthAlert.classList.add('hidden');
+          return;
+        }
+
+        const isAuth = AUTHORIZED_ADMINS.some(e => e.toLowerCase() === user.email.toLowerCase());
+        if (isAuth) {
+          gate.classList.add('hidden');
+          body.classList.remove('hidden');
+          unauthAlert.classList.add('hidden');
+        } else {
+          gate.classList.remove('hidden');
+          body.classList.add('hidden');
+          unauthAlert.classList.remove('hidden');
+          unauthAlert.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Logged in as <strong>${user.email}</strong>. This account is not authorized as an administrator.`;
+        }
+      }
+    }
+
+    const gateSignInBtn = document.getElementById('gateGoogleSignInBtn');
+    if (gateSignInBtn) {
+      gateSignInBtn.addEventListener('click', async () => {
+        gateSignInBtn.disabled = true;
+        gateSignInBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+        if (window.supabaseClient) {
+          await window.supabaseClient.auth.signInWithOAuth({
+            provider: 'google',
+            options: { redirectTo: window.location.origin + window.location.pathname }
+          });
+        }
+      });
+    }
+
+    verifyBillingAccess();
+
+    // ============================================================
+    // Bill Generator Logic
+    // ============================================================
+    let currentLang = 'en';
+    let rowCount = 0;
+    let activeDescInput = null;
+
+    const recentTexts = [
+      'Concrete Well Ring',
+      'Septic Tank Ring',
+      'Kitchen Water Tank',
+      'Fencing Post',
+      'Plot Landmark Post',
+      'Jali'
+    ];
+
+    // Set auto date (DD/MM/YYYY) while keeping it editable
+    function setAutoDate() {
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, '0');
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const yyyy = now.getFullYear();
+      document.getElementById('dateInput').value = `${dd}/${mm}/${yyyy}`;
+    }
+
+    function renderRecentChips() {
+      const container = document.getElementById('recentChips');
+      container.innerHTML = '';
+      recentTexts.forEach(txt => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chip';
+        btn.textContent = `+ ${txt}`;
+        btn.onclick = () => applyRecentText(txt);
+        container.appendChild(btn);
+      });
+    }
+
+    function applyRecentText(text) {
+      let target = activeDescInput;
+      if (!target) {
+        const allDesc = document.querySelectorAll('.desc-input');
+        target = allDesc[allDesc.length - 1];
+      }
+      if (target) {
+        target.value = target.value ? `${target.value} - ${text}` : text;
+        target.focus();
+      }
+    }
+
+    function addItemRow(defaultSize = '', defaultDesc = '', defaultPcs = '', defaultRate = '') {
+      rowCount += 1;
+      const tbody = document.getElementById('itemsBody');
+      const tr = document.createElement('tr');
+      tr.dataset.rowId = rowCount;
+
+      tr.innerHTML = `
+        <td class="col-no">${rowCount}</td>
+        <td class="col-item">
+          <div class="item-cell-wrap">
+            <input type="text" class="size-input" placeholder="Size" value="${defaultSize}" />
+            <input type="text" class="desc-input" placeholder="Particulars" value="${defaultDesc}" onfocus="activeDescInput = this" />
+          </div>
+        </td>
+        <td class="col-pcs">
+          <input type="number" min="0" step="1" class="pcs-input" placeholder="0" value="${defaultPcs}" oninput="recalculateAll()" style="text-align:center;" />
+        </td>
+        <td class="col-rate">
+          <input type="number" min="0" step="0.01" class="rate-input" placeholder="0.00" value="${defaultRate}" oninput="recalculateAll()" style="text-align:right;" />
+        </td>
+        <td class="col-amt">
+          <span class="amt-display row-amt" data-value="0">0.00</span>
+        </td>
+      `;
+
+      tbody.appendChild(tr);
+      recalculateAll();
+    }
+
+    function recalculateAll() {
+      let itemsSum = 0;
+
+      document.querySelectorAll('#itemsBody tr').forEach(tr => {
+        const pcs = parseFloat(tr.querySelector('.pcs-input').value) || 0;
+        const rate = parseFloat(tr.querySelector('.rate-input').value) || 0;
+        const amount = pcs * rate;
+        itemsSum += amount;
+        const amtSpan = tr.querySelector('.row-amt');
+        amtSpan.dataset.value = amount.toFixed(2);
+        amtSpan.textContent = amount.toFixed(2);
+      });
+
+      const sign = document.getElementById('adjSign').value;
+      const adjVal = Math.abs(parseFloat(document.getElementById('adjAmountInput').value) || 0);
+      const signedAdj = sign === '-' ? -adjVal : adjVal;
+
+      document.getElementById('adjFormatted').textContent = `${sign} ${adjVal.toFixed(2)}`;
+
+      const grandTotal = itemsSum + signedAdj;
+      document.getElementById('grandTotalDisplay').textContent = grandTotal.toFixed(2);
+    }
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'en' ? 'ta' : 'en';
+      document.querySelectorAll('[data-en]').forEach(el => {
+        el.innerHTML = el.getAttribute(`data-${currentLang}`);
+      });
+      document.getElementById('langBtn').textContent =
+        currentLang === 'en' ? 'Switch to தமிழ்' : 'Switch to English';
+    }
+
+    // ============================================================
+    // WhatsApp Share Function
+    // ============================================================
+    function shareWhatsApp() {
+      const billNo = document.getElementById('billNoInput').value || '185';
+      const billDate = document.getElementById('dateInput').value;
+      const custInfo = document.getElementById('custNameInput').value.trim();
+
+      let msg = `🧾 *M. YUVARAJ CEMENT WORKS*\n`;
+      msg += `(Prop: G. Murugesan)\n`;
+      msg += `--------------------------------\n`;
+      msg += `📄 *Bill No:* ${billNo}\n`;
+      msg += `📅 *Date:* ${billDate}\n`;
+      if (custInfo) msg += `👤 *To:* ${custInfo}\n`;
+      msg += `--------------------------------\n`;
+      msg += `*PARTICULARS & ITEMS:*\n`;
+
+      let hasItems = false;
+      document.querySelectorAll('#itemsBody tr').forEach((tr, i) => {
+        const size = tr.querySelector('.size-input').value.trim();
+        const desc = tr.querySelector('.desc-input').value.trim();
+        const pcs = parseFloat(tr.querySelector('.pcs-input').value) || 0;
+        const rate = parseFloat(tr.querySelector('.rate-input').value) || 0;
+        const amt = (pcs * rate).toFixed(2);
+
+        if (pcs > 0 || desc || size) {
+          hasItems = true;
+          const label = [size, desc].filter(Boolean).join(' ');
+          msg += `${i + 1}. *${label}*\n   ${pcs} Pcs × ₹${rate} = *₹${amt}*\n`;
+        }
+      });
+
+      const sign = document.getElementById('adjSign').value;
+      const adjVal = Math.abs(parseFloat(document.getElementById('adjAmountInput').value) || 0);
+      const adjLabel = document.getElementById('adjLabel').value.trim() || 'Advance / Adj';
+      if (adjVal > 0) {
+        msg += `--------------------------------\n`;
+        msg += `${adjLabel}: ${sign}₹${adjVal.toFixed(2)}\n`;
+      }
+
+      const total = document.getElementById('grandTotalDisplay').textContent;
+      msg += `--------------------------------\n`;
+      msg += `💰 *GRAND TOTAL: ₹${total}*\n`;
+      msg += `--------------------------------\n`;
+      msg += `📍 *No. 67/1, Bharathiyar Street, Govarthanagiri, Avadi, Chennai - 71*\n`;
+      msg += `📞 *Cell:* 9941595850 | 6382132040 | 8838135069\n`;
+      msg += `🌐 murugesan-well-rings.vercel.app`;
+
+      const encoded = encodeURIComponent(msg);
+      window.open(`https://wa.me/?text=${encoded}`, '_blank');
+    }
+
+    // Initialize
+    setAutoDate();
+    renderRecentChips();
+    addItemRow('4x4', 'Septic Tank Ring', '', '');
+    addItemRow('3x3', '', '', '');
+    addItemRow('', '', '', '');
+    addItemRow('', '', '', '');
+  </script>
+
+</body>
+</html>
