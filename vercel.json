@@ -2,6 +2,10 @@
   "buildCommand": "",
   "outputDirectory": ".",
   "cleanUrls": true,
+  "rewrites": [
+    { "source": "/(.*)\\.sql", "destination": "/404.html" },
+    { "source": "/\\.claude/(.*)", "destination": "/404.html" }
+  ],
   "headers": [
     {
       "source": "/(.*).(png|jpg|jpeg|webp|svg|gif|ico|css|js)",

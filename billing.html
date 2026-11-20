@@ -518,46 +518,70 @@
       border-top: 1.5px solid var(--bill-red);
       background-color: #fffafa;
       font-weight: 700;
+      padding: 3px 4px;
     }
 
     .adj-controls {
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 4px;
       width: 100%;
       box-sizing: border-box;
     }
 
     .sign-select {
       width: 32px !important;
-      min-width: 30px !important;
+      min-width: 28px !important;
       font-weight: 800 !important;
       color: var(--bill-red) !important;
       border: 1px solid #fca5a5 !important;
       border-radius: 4px;
-      padding: 1px 1px;
+      padding: 1px 2px;
       background: #fff !important;
       font-size: 11px !important;
       outline: none;
       flex-shrink: 0;
+      cursor: pointer;
     }
 
     .adj-label {
       flex: 1 !important;
       min-width: 0 !important;
       border: none !important;
+      border-bottom: 1px dashed #fca5a5 !important;
       outline: none !important;
       font-size: 11px !important;
-      padding: 1px 2px !important;
+      padding: 1px 3px !important;
       background: transparent;
       box-sizing: border-box;
       color: #111827;
       font-family: inherit;
+      font-weight: 600;
+    }
+
+    .adj-input-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 3px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .adj-sign-badge {
+      font-weight: 800;
+      font-size: 11.5px;
+      color: var(--bill-red);
+      user-select: none;
+      flex-shrink: 0;
     }
 
     .adj-amount-input {
+      flex: 1;
       width: 100% !important;
+      max-width: 70px;
       border: none !important;
+      border-bottom: 1px dashed #fca5a5 !important;
       outline: none !important;
       text-align: right !important;
       font-size: 11px !important;
@@ -567,6 +591,30 @@
       color: #111827;
       font-family: inherit;
       font-weight: 700 !important;
+    }
+
+    .adj-formatted {
+      display: none;
+    }
+
+    .btn-del-row {
+      background: transparent;
+      border: none;
+      color: #ef4444;
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0 2px 0 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s;
+    }
+
+    .btn-del-row:hover {
+      color: #b91c1c;
+      transform: scale(1.2);
     }
 
     .btn-adj-add {
@@ -775,10 +823,18 @@
       .top-bar,
       .recent-bar,
       .sign-select,
+      .btn-del-adj,
+      .btn-del-row,
+      .adj-input-wrap,
       .mobile-menu-overlay,
       #adminAuthGate,
       #imageShareModal {
         display: none !important;
+      }
+      .adj-formatted {
+        display: block !important;
+        text-align: right !important;
+        font-weight: 700 !important;
       }
       .billing-content-container {
         padding: 0 !important;
@@ -1186,7 +1242,10 @@
       tr.dataset.rowId = rowCount;
 
       tr.innerHTML = `
-        <td class="col-no">${rowCount}</td>
+        <td class="col-no">
+          <button type="button" class="btn-del-row no-print" onclick="removeItemRow(this)" title="Delete row">&times;</button>
+          <span class="row-num">${rowCount}</span>
+        </td>
         <td class="col-item">
           <div class="item-cell-wrap">
             <input type="text" class="size-input" placeholder="Size" value="${defaultSize}" />
@@ -1208,6 +1267,19 @@
       recalculateAll();
     }
 
+    function removeItemRow(btn) {
+      const tr = btn.closest('tr');
+      if (tr) {
+        tr.remove();
+        document.querySelectorAll('#itemsBody tr').forEach((row, i) => {
+          const numSpan = row.querySelector('.row-num');
+          if (numSpan) numSpan.textContent = i + 1;
+        });
+        rowCount = document.querySelectorAll('#itemsBody tr').length;
+        recalculateAll();
+      }
+    }
+
     let adjRowCount = 0;
 
     function addAdjRow(defaultSign = '+', defaultLabel = '', defaultAmount = '') {
@@ -1217,25 +1289,22 @@
       tr.className = 'adj-row';
       tr.dataset.adjId = adjRowCount;
 
-      const rateLabelEn = defaultSign === '-' ? 'Deduction' : 'Adj. Rate';
-      const rateLabelTa = defaultSign === '-' ? 'கழிவு' : 'சரிசெய்தல்';
-
       tr.innerHTML = `
-        <td colspan="2">
+        <td colspan="4">
           <div class="adj-controls">
-            <button type="button" class="btn-del-adj no-print" onclick="removeAdjRow(${adjRowCount})" title="Remove row">&times;</button>
+            <button type="button" class="btn-del-adj no-print" onclick="removeAdjRow(${adjRowCount})" title="Remove adjustment">&times;</button>
             <select class="sign-select adj-sign" onchange="recalculateAll()">
               <option value="+" ${defaultSign === '+' ? 'selected' : ''}>+</option>
               <option value="-" ${defaultSign === '-' ? 'selected' : ''}>-</option>
             </select>
-            <input type="text" class="adj-label" placeholder="Transport / Advance / Other" value="${defaultLabel}" oninput="recalculateAll()" />
+            <input type="text" class="adj-label" placeholder="Advance / Transport / Loading" value="${defaultLabel}" oninput="recalculateAll()" />
           </div>
         </td>
-        <td colspan="2" style="text-align: right;" class="adj-rate-col" data-en="${rateLabelEn}" data-ta="${rateLabelTa}">
-          ${currentLang === 'ta' ? rateLabelTa : rateLabelEn}
-        </td>
-        <td style="text-align: right;">
-          <input type="number" step="0.01" class="adj-amount-input" placeholder="0.00" value="${defaultAmount}" oninput="recalculateAll()" />
+        <td class="col-amt" style="text-align: right;">
+          <div class="adj-input-wrap">
+            <span class="adj-sign-badge" style="color: ${defaultSign === '-' ? '#b91c1c' : '#15803d'};">${defaultSign}</span>
+            <input type="number" min="0" step="0.01" class="adj-amount-input" placeholder="0.00" value="${defaultAmount}" oninput="recalculateAll()" />
+          </div>
           <span class="amt-display adj-formatted">${defaultSign} 0.00</span>
         </td>
       `;
@@ -1271,6 +1340,12 @@
       document.querySelectorAll('#adjBody tr.adj-row').forEach(tr => {
         const signEl = tr.querySelector('.adj-sign');
         const sign = signEl ? signEl.value : '+';
+        const signBadge = tr.querySelector('.adj-sign-badge');
+        if (signBadge) {
+          signBadge.textContent = sign;
+          signBadge.style.color = sign === '-' ? '#b91c1c' : '#15803d';
+        }
+
         const amtInput = tr.querySelector('.adj-amount-input');
         const val = Math.abs(parseFloat(amtInput ? amtInput.value : 0) || 0);
         const signedVal = sign === '-' ? -val : val;
@@ -1527,6 +1602,9 @@
         }
       });
 
+      // Remove delete buttons from clone
+      clonedDoc.querySelectorAll('.btn-del-row, .btn-del-adj').forEach(el => el.remove());
+
       // Adjustment / Extra Charges (Transport, Advance, etc.)
       const origAdjRows = document.querySelectorAll('#adjBody tr.adj-row');
       const cloneAdjRows = clonedDoc.querySelectorAll('#adjBody tr.adj-row');
@@ -1537,27 +1615,29 @@
 
         const sign = origTr.querySelector('.adj-sign')?.value || '+';
         const label = origTr.querySelector('.adj-label')?.value.trim() || 'Extra / Adjustment';
-        const amt = parseFloat(origTr.querySelector('.adj-amount-input')?.value) || 0;
+        const amt = Math.abs(parseFloat(origTr.querySelector('.adj-amount-input')?.value) || 0);
 
         const cloneControls = cloneTr.querySelector('.adj-controls');
         if (cloneControls) {
           const s = clonedDoc.createElement('span');
-          s.style.fontWeight = '800';
-          s.style.color = '#b91c1c';
-          s.textContent = `${sign} ${label}`;
+          s.style.fontWeight = '700';
+          s.style.color = sign === '-' ? '#b91c1c' : '#15803d';
+          s.textContent = `${sign === '-' ? 'Less (-) ' : 'Add (+) '} ${label}`;
           cloneControls.parentNode.replaceChild(s, cloneControls);
         }
 
-        const cloneAmtInput = cloneTr.querySelector('.adj-amount-input');
-        if (cloneAmtInput) {
-          cloneAmtInput.style.display = 'none';
+        const cloneWrap = cloneTr.querySelector('.adj-input-wrap');
+        if (cloneWrap) {
+          cloneWrap.remove();
         }
 
         const cloneFormatted = cloneTr.querySelector('.adj-formatted');
         if (cloneFormatted) {
+          cloneFormatted.style.display = 'block';
           cloneFormatted.style.fontSize = '11px';
           cloneFormatted.style.fontWeight = '700';
-          cloneFormatted.style.color = '#b91c1c';
+          cloneFormatted.style.textAlign = 'right';
+          cloneFormatted.style.color = sign === '-' ? '#b91c1c' : '#15803d';
           cloneFormatted.textContent = `${sign} ${amt.toFixed(2)}`;
         }
       });

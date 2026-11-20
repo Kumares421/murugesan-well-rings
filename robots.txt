@@ -1,4 +1,9 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /admin.html
+Disallow: /billing
+Disallow: /billing.html
+Disallow: /*.sql$
 
 Sitemap: https://murugesan-well-rings.vercel.app/sitemap.xml

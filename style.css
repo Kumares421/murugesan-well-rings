@@ -3076,3 +3076,138 @@ body {
   color: var(--text-muted);
   margin-top: 4px;
 }
+
+/* ============================================================
+   Product Specifications & 10 Outer Diameter Sizes (Phase 5)
+   ============================================================ */
+.product-specs-card {
+  margin-bottom: 30px;
+}
+
+.product-sizes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+  gap: 12px;
+}
+
+.size-spec-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.size-spec-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary-teal);
+  box-shadow: var(--shadow-sm);
+}
+
+.size-spec-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.size-spec-header h4 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.size-badge {
+  background: rgba(13, 148, 136, 0.12);
+  color: var(--primary-teal);
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.size-dims {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  line-height: 1.35;
+}
+
+.size-dims strong {
+  color: var(--text-main);
+}
+
+.size-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: auto;
+}
+
+.btn-size-quote {
+  padding: 6px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.btn-size-mat {
+  background: rgba(13, 148, 136, 0.12);
+  color: var(--primary-teal);
+  border-color: rgba(13, 148, 136, 0.3);
+}
+
+.btn-size-mat:hover {
+  background: var(--primary-teal);
+  color: #fff;
+}
+
+.btn-size-inst {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--accent-blue);
+  border-color: rgba(37, 99, 235, 0.3);
+}
+
+.btn-size-inst:hover {
+  background: var(--accent-blue);
+  color: #fff;
+}
+
+@media (max-width: 600px) {
+  .product-sizes-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .size-spec-card {
+    padding: 10px 8px;
+  }
+  .size-spec-header h4 {
+    font-size: 0.92rem;
+  }
+  .size-dims {
+    font-size: 0.72rem;
+  }
+  .btn-size-quote {
+    font-size: 0.7rem;
+    padding: 5px 4px;
+  }
+}
+
+@media (max-width: 380px) {
+  .product-sizes-grid {
+    grid-template-columns: 1fr;
+  }
+}

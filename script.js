@@ -76,7 +76,7 @@ function localFallbackForItem(item) {
 document.documentElement.removeAttribute("data-theme");
 localStorage.removeItem("theme");
 const siteLogo = document.querySelector(".site-logo");
-if (siteLogo) siteLogo.src = "logo.png";
+if (siteLogo && !siteLogo.getAttribute("src")) siteLogo.src = "logo.webp";
 
 // ============================================================
 // Mobile Navigation Toggle & Backdrop
@@ -415,44 +415,121 @@ async function loadDynamicContent(forceRefresh) {
   if (materials.length === 0) {
     materials = [
       {
-        id: "mat_4ft",
-        title: "4 FT-Concrete Well Ring",
-        desc: "used for septitank,water well, rainwater harvesting...etc",
-        meta: "4ft outerDia / 11 inch height / 1.5 inch thickness",
-        tag: "4ft outerDia / 11 inch height / 1.5 inch thickness",
-        icon: "fas fa-info-circle",
+        id: "mat_1ft",
+        title: "1 FT - RCC Concrete Well Ring",
+        desc: "Precision cast RCC ring for compact bore inspection pits, garden irrigation & vertical extensions.",
+        meta: "1ft Outer Diameter | 11\" Height | 1.5\" Wall Thickness",
+        tag: "1ft Outer Dia / 11\" H / 1.5\" T",
+        icon: "fas fa-circle-notch",
         img_url: "logo.webp",
         category: "materials-only",
-        price: 500,
+        price: 350,
       },
       {
-        id: "mat_3ft",
-        title: "3 FT-Concrete Well Ring",
-        desc: "used for sokepet,kitchen waste water,washroom water......etc",
-        meta: "3ft outerDia / 11 inch height / 1.5 inch thickness",
-        tag: "3ft outerDia / 11 inch height / 1.5 inch thickness",
-        icon: "fas fa-info-circle",
+        id: "mat_1_5ft",
+        title: "1.5 FT - RCC Concrete Well Ring",
+        desc: "Ideal for small diameter inspection shafts, earthing pits, and utility line chambers.",
+        meta: "1.5ft Outer Diameter | 11\" Height | 1.5\" Wall Thickness",
+        tag: "1.5ft Outer Dia / 11\" H / 1.5\" T",
+        icon: "fas fa-circle-notch",
         img_url: "logo.webp",
         category: "materials-only",
-        price: 500,
+        price: 400,
       },
       {
         id: "mat_2ft",
-        title: "2 FT-Concrete Well Ring",
-        desc: "small space we can install this size and to extend the depth well",
-        meta: "2 ft outerDia / 11 inch height / 1.5 inch thickness",
-        tag: "2 ft outerDia / 11 inch height / 1.5 inch thickness",
-        icon: "fas fa-info-circle",
+        title: "2 FT - RCC Concrete Well Ring",
+        desc: "Small space installation, soak pits, kitchen waste water chambers and extending well depth.",
+        meta: "2ft Outer Diameter | 11\" Height | 1.5\" Wall Thickness",
+        tag: "2ft Outer Dia / 11\" H / 1.5\" T",
+        icon: "fas fa-circle-notch",
+        img_url: "logo.webp",
+        category: "materials-only",
+        price: 450,
+      },
+      {
+        id: "mat_2_5ft",
+        title: "2.5 FT - RCC Concrete Well Ring",
+        desc: "Medium residential soakaway wells, tree irrigation sumps, and drainage connections.",
+        meta: "2.5ft Outer Diameter | 11\" Height | 1.5\" Wall Thickness",
+        tag: "2.5ft Outer Dia / 11\" H / 1.5\" T",
+        icon: "fas fa-circle-notch",
+        img_url: "logo.webp",
+        category: "materials-only",
+        price: 480,
+      },
+      {
+        id: "mat_3ft",
+        title: "3 FT - RCC Concrete Well Ring",
+        desc: "Most popular for domestic soak pits, kitchen waste water collection, and rainwater percolation.",
+        meta: "3ft Outer Diameter | 11\" Height | 1.5\" Wall Thickness",
+        tag: "3ft Outer Dia / 11\" H / 1.5\" T",
+        icon: "fas fa-circle-notch",
         img_url: "logo.webp",
         category: "materials-only",
         price: 500,
       },
       {
+        id: "mat_3_25ft",
+        title: "3.25 FT - RCC Concrete Well Ring",
+        desc: "Slightly expanded diameter for increased water storage in residential wells and deep chambers.",
+        meta: "3.25ft Outer Diameter | 11\" Height | 1.5\" Wall Thickness",
+        tag: "3.25ft Outer Dia / 11\" H / 1.5\" T",
+        icon: "fas fa-circle-notch",
+        img_url: "logo.webp",
+        category: "materials-only",
+        price: 550,
+      },
+      {
+        id: "mat_4ft",
+        title: "4 FT - RCC Concrete Well Ring",
+        desc: "Heavy-duty reinforced ring widely used for septic tanks, open water wells, and rainwater harvesting.",
+        meta: "4ft Outer Diameter | 11\" Height | 1.5\" Wall Thickness",
+        tag: "4ft Outer Dia / 11\" H / 1.5\" T",
+        icon: "fas fa-circle-notch",
+        img_url: "logo.webp",
+        category: "materials-only",
+        price: 600,
+      },
+      {
+        id: "mat_4_25ft",
+        title: "4.25 FT - RCC Concrete Well Ring",
+        desc: "High capacity concrete rings for multi-household soak systems and commercial drainage pits.",
+        meta: "4.25ft Outer Diameter | 11\" Height | 1.5\" Wall Thickness",
+        tag: "4.25ft Outer Dia / 11\" H / 1.5\" T",
+        icon: "fas fa-circle-notch",
+        img_url: "logo.webp",
+        category: "materials-only",
+        price: 680,
+      },
+      {
+        id: "mat_5ft",
+        title: "5 FT - RCC Concrete Well Ring",
+        desc: "Large diameter ring for deep agricultural irrigation wells, community rainwater pits & large tanks.",
+        meta: "5ft Outer Diameter | 11\" Height | 1.5\" Wall Thickness",
+        tag: "5ft Outer Dia / 11\" H / 1.5\" T",
+        icon: "fas fa-circle-notch",
+        img_url: "logo.webp",
+        category: "materials-only",
+        price: 850,
+      },
+      {
+        id: "mat_6ft",
+        title: "6 FT - RCC Concrete Well Ring",
+        desc: "Maximum capacity heavy-duty reinforced well ring for deep farm wells and commercial storm sumps.",
+        meta: "6ft Outer Diameter | 11\" Height | 1.5\" Wall Thickness",
+        tag: "6ft Outer Dia / 11\" H / 1.5\" T",
+        icon: "fas fa-circle-notch",
+        img_url: "logo.webp",
+        category: "materials-only",
+        price: 1100,
+      },
+      {
         id: "mat_3ft_inst",
-        title: "3ft Well Ring + Installation",
-        desc: "Standard 3ft concrete ring package including manual digging, lowering, and safety alignment.",
-        meta: "Material + Manual Digging",
-        tag: "Digging + Supply",
+        title: "3ft Well Ring + Manual Digging + Installation",
+        desc: "Standard residential package: supply of 3ft rings, expert manual digging, lowering, and safety packing.",
+        meta: "Material + Manual Digging + Installation",
+        tag: "Digging + Supply Package",
         icon: "fas fa-tools",
         img_url: "logo.webp",
         category: "installation",
@@ -460,10 +537,10 @@ async function loadDynamicContent(forceRefresh) {
       },
       {
         id: "mat_4ft_inst",
-        title: "4ft Well Ring + Installation",
-        desc: "Complete commercial setup with 4ft rings, manual excavation, alignment support, and sandbed packing.",
-        meta: "Material + Manual Digging",
-        tag: "Digging + Supply",
+        title: "4ft Well Ring + Manual Digging + Installation",
+        desc: "Commercial setup: 4ft rings, manual excavation by skilled workers, ring lowering, and joint alignment.",
+        meta: "Material + Manual Digging + Installation",
+        tag: "Digging + Supply Package",
         icon: "fas fa-tools",
         img_url: "logo.webp",
         category: "installation",
@@ -717,7 +794,7 @@ async function loadDynamicContent(forceRefresh) {
 }
 
 // ============================================================
-// Contact Form submission via EmailJS
+// Contact Form submission via EmailJS & Direct WhatsApp Quotes
 // ============================================================
 const contactForm = document.getElementById("contactForm");
 if (contactForm) {
@@ -727,37 +804,103 @@ if (contactForm) {
     const name = document.getElementById("name").value;
     const email = document.getElementById("email").value;
     const phone = document.getElementById("phone").value;
+    const ringSize = document.getElementById("ringSize") ? document.getElementById("ringSize").value : "";
     const serviceType = document.getElementById("serviceType").value;
     const message = document.getElementById("message").value;
 
     const btn = contactForm.querySelector('button[type="submit"]');
-    const originalText = btn.innerText;
-    btn.innerText = "Sending...";
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
     btn.disabled = true;
 
     const templateParams = {
       from_name: name,
       reply_to: email,
       phone_number: phone,
+      ring_size: ringSize,
       service_type: serviceType,
       message_details: message,
     };
 
     emailjs.send("service_34ugknd", "template_hecta5f", templateParams).then(
       () => {
-        btn.innerText = originalText;
+        btn.innerHTML = originalText;
         btn.disabled = false;
-        alert("Message sent successfully!");
+        alert("Enquiry sent successfully! Our team will contact you shortly.");
         contactForm.reset();
       },
       (err) => {
-        btn.innerText = originalText;
+        btn.innerHTML = originalText;
         btn.disabled = false;
         alert("Failed to send message: " + JSON.stringify(err));
       },
     );
   });
 }
+
+// Phase 6: Direct WhatsApp Enquiry Handler from Contact Form
+window.sendDirectContactWhatsApp = function() {
+  const name = document.getElementById("name")?.value.trim() || "Customer";
+  const phone = document.getElementById("phone")?.value.trim() || "";
+  const ringSize = document.getElementById("ringSize")?.value || "Not specified";
+  const serviceType = document.getElementById("serviceType")?.value || "Quotation Request";
+  const message = document.getElementById("message")?.value.trim() || "";
+
+  let waText = `*MURUGESAN WELL RINGS - QUOTATION REQUEST*\n` +
+    `--------------------------------\n` +
+    `👤 *Name:* ${name}\n` +
+    (phone ? `📞 *Phone:* ${phone}\n` : '') +
+    `📏 *Ring Size:* ${ringSize}\n` +
+    `🛠️ *Quotation Option:* ${serviceType}\n`;
+
+  if (message) {
+    waText += `📝 *Requirements & Depth:* ${message}\n`;
+  }
+
+  waText += `--------------------------------\n` +
+    `_Please share your best quote based on quantity and delivery location._`;
+
+  const waUrl = `https://wa.me/918838135069?text=${encodeURIComponent(waText)}`;
+  window.open(waUrl, '_blank');
+};
+
+// Phase 5 & 6: Interactive Size Enquire Action
+window.enquireRingWhatsApp = function(sizeStr, optionType) {
+  const ringSizeEl = document.getElementById("ringSize");
+  const serviceTypeEl = document.getElementById("serviceType");
+  const contactSection = document.getElementById("contact");
+
+  if (ringSizeEl) {
+    for (let i = 0; i < ringSizeEl.options.length; i++) {
+      if (ringSizeEl.options[i].value.startsWith(sizeStr)) {
+        ringSizeEl.selectedIndex = i;
+        break;
+      }
+    }
+  }
+
+  if (serviceTypeEl) {
+    if (optionType === 'materials') {
+      serviceTypeEl.value = "Option 1: Product Only (Materials Supply)";
+    } else if (optionType === 'installation') {
+      serviceTypeEl.value = "Option 2: Product + Manual Digging + Installation";
+    }
+  }
+
+  if (contactSection) {
+    contactSection.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  const promptText = `*MURUGESAN WELL RINGS - RCC WELL RING QUOTE*\n` +
+    `--------------------------------\n` +
+    `📏 *Outer Diameter:* ${sizeStr} (Height: 11 inches, Wall Thickness: 1.5 inches)\n` +
+    `🛠️ *Selected Option:* ${optionType === 'materials' ? 'Option 1: Product Only (Supply)' : 'Option 2: Product + Manual Digging + Installation'}\n` +
+    `--------------------------------\n` +
+    `Please share pricing details based on my delivery site location and quantity required.`;
+
+  const waUrl = `https://wa.me/918838135069?text=${encodeURIComponent(promptText)}`;
+  window.open(waUrl, '_blank');
+};
 
 // ============================================================
 // Admin State
