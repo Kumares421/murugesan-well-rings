@@ -542,7 +542,7 @@
       flex-shrink: 0;
     }
 
-    #adjLabel {
+    .adj-label {
       flex: 1 !important;
       min-width: 0 !important;
       border: none !important;
@@ -553,6 +553,64 @@
       box-sizing: border-box;
       color: #111827;
       font-family: inherit;
+    }
+
+    .adj-amount-input {
+      width: 100% !important;
+      border: none !important;
+      outline: none !important;
+      text-align: right !important;
+      font-size: 11px !important;
+      padding: 1px 0 !important;
+      background: transparent;
+      box-sizing: border-box;
+      color: #111827;
+      font-family: inherit;
+      font-weight: 700 !important;
+    }
+
+    .btn-adj-add {
+      background: #fef2f2;
+      color: var(--bill-red);
+      border: 1px dashed var(--bill-red);
+      border-radius: 4px;
+      padding: 3px 7px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    .btn-adj-add:hover {
+      background: #fee2e2;
+    }
+
+    .btn-adj-add:active {
+      transform: scale(0.97);
+    }
+
+    .btn-del-adj {
+      background: transparent;
+      border: none;
+      color: #ef4444;
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0 4px 0 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s;
+    }
+
+    .btn-del-adj:hover {
+      color: #b91c1c;
+      transform: scale(1.2);
     }
 
     .grand-row td {
@@ -908,21 +966,27 @@
               </tr>
             </thead>
             <tbody id="itemsBody"></tbody>
+            <!-- Dynamic Adjustment / Extra Charges Body -->
+            <tbody id="adjBody"></tbody>
             <tfoot>
-              <tr class="adj-row">
-                <td colspan="2">
-                  <div class="adj-controls">
-                    <select id="adjSign" class="sign-select" onchange="recalculateAll()">
-                      <option value="-">-</option>
-                      <option value="+">+</option>
-                    </select>
-                    <input type="text" id="adjLabel" placeholder="Advance / Other" />
+              <!-- Add Extra Charge / Transport / Adj Action Row -->
+              <tr class="no-print add-adj-trigger-row">
+                <td colspan="5" style="padding: 5px 6px; background: #fffbfb; border-top: 1.5px dashed var(--bill-red);">
+                  <div style="display: flex; gap: 5px; align-items: center; flex-wrap: wrap;">
+                    <span style="font-size: 11px; font-weight: 700; color: #6b7280;" data-en="Add Extra / Adj:" data-ta="கூடுதல் / கழிவு:">Add Extra / Adj:</span>
+                    <button type="button" class="btn-adj-add" onclick="addAdjRow('+', currentLang === 'ta' ? 'வண்டி வாடகை' : 'Transport', '')"
+                            data-en="<i class='fas fa-truck'></i> + Transport" data-ta="<i class='fas fa-truck'></i> + வண்டி வாடகை">
+                      <i class="fas fa-truck"></i> + Transport
+                    </button>
+                    <button type="button" class="btn-adj-add" onclick="addAdjRow('-', currentLang === 'ta' ? 'முன்பணம்' : 'Advance', '')"
+                            data-en="<i class='fas fa-hand-holding-usd'></i> - Advance" data-ta="<i class='fas fa-hand-holding-usd'></i> - முன்பணம்">
+                      <i class="fas fa-hand-holding-usd"></i> - Advance
+                    </button>
+                    <button type="button" class="btn-adj-add" onclick="addAdjRow('+', '', '')"
+                            data-en="<i class='fas fa-plus-circle'></i> + Other Charge" data-ta="<i class='fas fa-plus-circle'></i> + இதர கட்டணம்">
+                      <i class="fas fa-plus-circle"></i> + Other Charge
+                    </button>
                   </div>
-                </td>
-                <td colspan="2" style="text-align: right;" data-en="Adj. Rate" data-ta="சரிசெய்தல்">Adj. Rate</td>
-                <td>
-                  <input type="number" step="0.01" id="adjAmountInput" placeholder="0.00" oninput="recalculateAll()" style="text-align:right; font-weight:700;" />
-                  <span class="amt-display" id="adjFormatted" style="font-size:10.5px; color:#b91c1c;">- 0.00</span>
                 </td>
               </tr>
               <tr class="grand-row">
@@ -1076,7 +1140,9 @@
       'Kitchen Water Tank',
       'Fencing Post',
       'Plot Landmark Post',
-      'Jali'
+      'Jali',
+      'Transport Charges',
+      'Loading / Unloading'
     ];
 
     // Set auto date (DD/MM/YYYY) while keeping it editable
@@ -1142,6 +1208,50 @@
       recalculateAll();
     }
 
+    let adjRowCount = 0;
+
+    function addAdjRow(defaultSign = '+', defaultLabel = '', defaultAmount = '') {
+      adjRowCount += 1;
+      const tbody = document.getElementById('adjBody');
+      const tr = document.createElement('tr');
+      tr.className = 'adj-row';
+      tr.dataset.adjId = adjRowCount;
+
+      const rateLabelEn = defaultSign === '-' ? 'Deduction' : 'Adj. Rate';
+      const rateLabelTa = defaultSign === '-' ? 'கழிவு' : 'சரிசெய்தல்';
+
+      tr.innerHTML = `
+        <td colspan="2">
+          <div class="adj-controls">
+            <button type="button" class="btn-del-adj no-print" onclick="removeAdjRow(${adjRowCount})" title="Remove row">&times;</button>
+            <select class="sign-select adj-sign" onchange="recalculateAll()">
+              <option value="+" ${defaultSign === '+' ? 'selected' : ''}>+</option>
+              <option value="-" ${defaultSign === '-' ? 'selected' : ''}>-</option>
+            </select>
+            <input type="text" class="adj-label" placeholder="Transport / Advance / Other" value="${defaultLabel}" oninput="recalculateAll()" />
+          </div>
+        </td>
+        <td colspan="2" style="text-align: right;" class="adj-rate-col" data-en="${rateLabelEn}" data-ta="${rateLabelTa}">
+          ${currentLang === 'ta' ? rateLabelTa : rateLabelEn}
+        </td>
+        <td style="text-align: right;">
+          <input type="number" step="0.01" class="adj-amount-input" placeholder="0.00" value="${defaultAmount}" oninput="recalculateAll()" />
+          <span class="amt-display adj-formatted">${defaultSign} 0.00</span>
+        </td>
+      `;
+
+      tbody.appendChild(tr);
+      recalculateAll();
+    }
+
+    function removeAdjRow(adjId) {
+      const row = document.querySelector(`#adjBody tr[data-adj-id="${adjId}"]`);
+      if (row) {
+        row.remove();
+        recalculateAll();
+      }
+    }
+
     function recalculateAll() {
       let itemsSum = 0;
 
@@ -1151,18 +1261,33 @@
         const amount = pcs * rate;
         itemsSum += amount;
         const amtSpan = tr.querySelector('.row-amt');
-        amtSpan.dataset.value = amount.toFixed(2);
-        amtSpan.textContent = amount.toFixed(2);
+        if (amtSpan) {
+          amtSpan.dataset.value = amount.toFixed(2);
+          amtSpan.textContent = amount.toFixed(2);
+        }
       });
 
-      const sign = document.getElementById('adjSign').value;
-      const adjVal = Math.abs(parseFloat(document.getElementById('adjAmountInput').value) || 0);
-      const signedAdj = sign === '-' ? -adjVal : adjVal;
+      let adjSum = 0;
+      document.querySelectorAll('#adjBody tr.adj-row').forEach(tr => {
+        const signEl = tr.querySelector('.adj-sign');
+        const sign = signEl ? signEl.value : '+';
+        const amtInput = tr.querySelector('.adj-amount-input');
+        const val = Math.abs(parseFloat(amtInput ? amtInput.value : 0) || 0);
+        const signedVal = sign === '-' ? -val : val;
+        adjSum += signedVal;
 
-      document.getElementById('adjFormatted').textContent = `${sign} ${adjVal.toFixed(2)}`;
+        const formattedSpan = tr.querySelector('.adj-formatted');
+        if (formattedSpan) {
+          formattedSpan.textContent = `${sign} ${val.toFixed(2)}`;
+          formattedSpan.style.color = sign === '-' ? '#b91c1c' : '#15803d';
+        }
+      });
 
-      const grandTotal = itemsSum + signedAdj;
-      document.getElementById('grandTotalDisplay').textContent = grandTotal.toFixed(2);
+      const grandTotal = itemsSum + adjSum;
+      const gtEl = document.getElementById('grandTotalDisplay');
+      if (gtEl) {
+        gtEl.textContent = grandTotal.toFixed(2);
+      }
     }
 
     function toggleLanguage() {
@@ -1402,21 +1527,45 @@
         }
       });
 
-      // Adjustment
-      const origSign = document.getElementById('adjSign');
-      const origLabel = document.getElementById('adjLabel');
-      const cloneAdjControls = clonedDoc.querySelector('.adj-controls');
-      if (cloneAdjControls && origSign && origLabel) {
-        const s = clonedDoc.createElement('span');
-        s.style.fontWeight = '800';
-        s.style.color = '#b91c1c';
-        s.textContent = `${origSign.value} ${origLabel.value.trim() || 'Advance / Other'}`;
-        cloneAdjControls.parentNode.replaceChild(s, cloneAdjControls);
-      }
+      // Adjustment / Extra Charges (Transport, Advance, etc.)
+      const origAdjRows = document.querySelectorAll('#adjBody tr.adj-row');
+      const cloneAdjRows = clonedDoc.querySelectorAll('#adjBody tr.adj-row');
 
-      const cloneAdjInput = clonedDoc.getElementById('adjAmountInput');
-      if (cloneAdjInput) {
-        cloneAdjInput.style.display = 'none';
+      origAdjRows.forEach((origTr, idx) => {
+        const cloneTr = cloneAdjRows[idx];
+        if (!cloneTr) return;
+
+        const sign = origTr.querySelector('.adj-sign')?.value || '+';
+        const label = origTr.querySelector('.adj-label')?.value.trim() || 'Extra / Adjustment';
+        const amt = parseFloat(origTr.querySelector('.adj-amount-input')?.value) || 0;
+
+        const cloneControls = cloneTr.querySelector('.adj-controls');
+        if (cloneControls) {
+          const s = clonedDoc.createElement('span');
+          s.style.fontWeight = '800';
+          s.style.color = '#b91c1c';
+          s.textContent = `${sign} ${label}`;
+          cloneControls.parentNode.replaceChild(s, cloneControls);
+        }
+
+        const cloneAmtInput = cloneTr.querySelector('.adj-amount-input');
+        if (cloneAmtInput) {
+          cloneAmtInput.style.display = 'none';
+        }
+
+        const cloneFormatted = cloneTr.querySelector('.adj-formatted');
+        if (cloneFormatted) {
+          cloneFormatted.style.fontSize = '11px';
+          cloneFormatted.style.fontWeight = '700';
+          cloneFormatted.style.color = '#b91c1c';
+          cloneFormatted.textContent = `${sign} ${amt.toFixed(2)}`;
+        }
+      });
+
+      // Remove the Add Extra Charge trigger row from clone
+      const cloneTriggerRow = clonedDoc.querySelector('.add-adj-trigger-row');
+      if (cloneTriggerRow) {
+        cloneTriggerRow.remove();
       }
 
       // Signature
@@ -1466,6 +1615,7 @@
     addItemRow('3x3', '', '', '');
     addItemRow('', '', '', '');
     addItemRow('', '', '', '');
+    addAdjRow('-', 'Advance', '');
   </script>
 
 </body>
