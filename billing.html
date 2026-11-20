@@ -18,6 +18,9 @@
   <!-- Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <!-- html2canvas for capturing Bill as PNG Photo -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
   <!-- Base site style for header/navbar -->
   <link rel="stylesheet" href="style.css?v=15">
 
@@ -89,7 +92,70 @@
     .btn-lang { background-color: #1d4ed8; }
     .btn-add { background-color: #047857; }
     .btn-wa { background-color: #25d366; color: #fff; }
+    .btn-dl { background-color: #0284c7; color: #fff; }
     .btn-print { background-color: #b91c1c; }
+
+    /* Modal Backdrop for Image Share */
+    .image-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 5000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .image-modal-dialog {
+      background: #ffffff;
+      border-radius: 12px;
+      max-width: 460px;
+      width: 100%;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      color: #111827;
+      animation: modalFadeIn 0.2s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .image-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+    }
+
+    .image-modal-close {
+      background: transparent;
+      border: none;
+      font-size: 26px;
+      cursor: pointer;
+      color: #6b7280;
+      line-height: 1;
+      padding: 0 6px;
+    }
+
+    .clipboard-success-box {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: #15803d;
+      margin-bottom: 12px;
+      text-align: left;
+    }
 
     .recent-bar {
       width: 100%;
@@ -491,7 +557,8 @@
         <div class="btn-group">
           <button class="btn-bill btn-lang" onclick="toggleLanguage()" id="langBtn">Switch to தமிழ்</button>
           <button class="btn-bill btn-add" onclick="addItemRow()" id="addRowBtn">+ Add Row</button>
-          <button class="btn-bill btn-wa" onclick="shareWhatsApp()" id="waBtn"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+          <button class="btn-bill btn-wa" onclick="shareWhatsAppImage()" id="waImgBtn"><i class="fab fa-whatsapp"></i> WhatsApp (Image)</button>
+          <button class="btn-bill btn-dl" onclick="downloadBillImage()" id="dlBtn"><i class="fas fa-image"></i> Download Image</button>
         </div>
         <button class="btn-bill btn-print" onclick="window.print()" id="printBtn"><i class="fas fa-print"></i> Print Bill</button>
       </div>
@@ -615,6 +682,40 @@
             </div>
           </div>
 
+        </div>
+      </div>
+
+      <!-- WhatsApp Image Share Dialog Modal (for desktop / preview) -->
+      <div id="imageShareModal" class="image-modal-backdrop no-print hidden">
+        <div class="image-modal-dialog">
+          <div class="image-modal-header">
+            <h3 style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 16px;">
+              <i class="fab fa-whatsapp" style="color: #25d366; font-size: 20px;"></i> WhatsApp Bill Image
+            </h3>
+            <button class="image-modal-close" onclick="closeImageShareModal()">&times;</button>
+          </div>
+          <div class="image-modal-body">
+            <div class="clipboard-success-box" id="modalClipboardAlert">
+              <i class="fas fa-check-circle" style="color: #16a34a; font-size: 1.4rem;"></i>
+              <div>
+                <strong style="color: #15803d; font-size: 13.5px;">Bill Image Copied to Clipboard!</strong><br />
+                <span>Open your WhatsApp chat and press <strong>Ctrl + V</strong> to send the bill photo directly!</span>
+              </div>
+            </div>
+            
+            <div style="text-align: center; margin: 12px 0;">
+              <img id="modalPreviewImg" src="" alt="Bill Preview" style="max-width: 100%; max-height: 250px; border: 1.5px solid #d1d5db; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);" />
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px;">
+              <a id="modalWaBtn" href="https://web.whatsapp.com" target="_blank" class="btn-bill btn-wa" style="text-decoration: none; padding: 10px 18px; font-size: 13.5px;">
+                <i class="fab fa-whatsapp"></i> Open WhatsApp Web
+              </a>
+              <a id="modalDownloadBtn" href="#" download="Bill.png" class="btn-bill btn-dl" style="text-decoration: none; padding: 10px 18px; font-size: 13.5px;">
+                <i class="fas fa-download"></i> Save Image
+              </a>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -811,55 +912,281 @@
     }
 
     // ============================================================
-    // WhatsApp Share Function
+    // WhatsApp Image Share Function
     // ============================================================
-    function shareWhatsApp() {
-      const billNo = document.getElementById('billNoInput').value || '185';
-      const billDate = document.getElementById('dateInput').value;
-      const custInfo = document.getElementById('custNameInput').value.trim();
+    async function shareWhatsAppImage() {
+      const btn = document.getElementById('waImgBtn');
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Image...';
 
-      let msg = `🧾 *M. YUVARAJ CEMENT WORKS*\n`;
-      msg += `(Prop: G. Murugesan)\n`;
-      msg += `--------------------------------\n`;
-      msg += `📄 *Bill No:* ${billNo}\n`;
-      msg += `📅 *Date:* ${billDate}\n`;
-      if (custInfo) msg += `👤 *To:* ${custInfo}\n`;
-      msg += `--------------------------------\n`;
-      msg += `*PARTICULARS & ITEMS:*\n`;
+      try {
+        const sheet = document.querySelector('.bill-sheet');
+        const billNo = document.getElementById('billNoInput').value || '185';
+        const grandTotal = document.getElementById('grandTotalDisplay').textContent || '0.00';
+        const custInfo = document.getElementById('custNameInput').value.trim();
 
-      let hasItems = false;
-      document.querySelectorAll('#itemsBody tr').forEach((tr, i) => {
-        const size = tr.querySelector('.size-input').value.trim();
-        const desc = tr.querySelector('.desc-input').value.trim();
-        const pcs = parseFloat(tr.querySelector('.pcs-input').value) || 0;
-        const rate = parseFloat(tr.querySelector('.rate-input').value) || 0;
-        const amt = (pcs * rate).toFixed(2);
+        // 1. Generate High-Res Canvas using html2canvas
+        const canvas = await html2canvas(sheet, {
+          scale: 2.5,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          onclone: (clonedDoc) => {
+            convertInputsToSpansInClone(clonedDoc);
+          }
+        });
 
-        if (pcs > 0 || desc || size) {
-          hasItems = true;
-          const label = [size, desc].filter(Boolean).join(' ');
-          msg += `${i + 1}. *${label}*\n   ${pcs} Pcs × ₹${rate} = *₹${amt}*\n`;
+        // 2. Convert Canvas to Blob & File
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 0.95));
+        const fileName = `Bill-${billNo}-MurugesanWellRings.png`;
+        const file = new File([blob], fileName, { type: 'image/png' });
+
+        // 3. Native Web Share API (Works natively on Mobile Android & iOS WhatsApp)
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: `Bill No: ${billNo} - M. Yuvaraj Cement Works`,
+              text: `🧾 *M. YUVARAJ CEMENT WORKS*\n📄 Bill No: ${billNo}\n💰 Grand Total: ₹${grandTotal}\n📞 9941595850 / 6382132040`
+            });
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            return;
+          } catch (shareErr) {
+            if (shareErr.name === 'AbortError') {
+              btn.innerHTML = originalHtml;
+              btn.disabled = false;
+              return;
+            }
+            console.warn('Native share failed, using fallback:', shareErr);
+          }
+        }
+
+        // 4. Desktop Fallback (Clipboard + WhatsApp Web + Auto Download)
+        let copied = false;
+        try {
+          if (navigator.clipboard && window.ClipboardItem) {
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]);
+            copied = true;
+          }
+        } catch (e) {
+          console.warn('Clipboard copy error:', e);
+        }
+
+        // Prepare WhatsApp link
+        let phone = '';
+        const phoneMatch = custInfo.match(/\b\d{10}\b/);
+        if (phoneMatch) phone = '91' + phoneMatch[0];
+        const waText = `🧾 *M. YUVARAJ CEMENT WORKS*\n📄 Bill No: ${billNo}\n💰 Grand Total: ₹${grandTotal}\n📞 9941595850 / 6382132040`;
+        const waUrl = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(waText)}` : `https://web.whatsapp.com`;
+
+        // Trigger Auto Download
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = dataUrl;
+        link.click();
+
+        // Show Desktop helper modal
+        openImageShareModal(dataUrl, fileName, waUrl, copied);
+
+      } catch (err) {
+        console.error('Error generating bill image:', err);
+        alert('Failed to generate image: ' + err.message);
+      } finally {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+      }
+    }
+
+    // ============================================================
+    // Direct Download Image Function
+    // ============================================================
+    async function downloadBillImage() {
+      const btn = document.getElementById('dlBtn');
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+      try {
+        const sheet = document.querySelector('.bill-sheet');
+        const billNo = document.getElementById('billNoInput').value || '185';
+        const canvas = await html2canvas(sheet, {
+          scale: 2.5,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          onclone: (clonedDoc) => {
+            convertInputsToSpansInClone(clonedDoc);
+          }
+        });
+
+        const link = document.createElement('a');
+        link.download = `Bill-${billNo}-YuvarajCementWorks.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (err) {
+        alert('Download error: ' + err.message);
+      } finally {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+      }
+    }
+
+    // Clean inputs into static text inside html2canvas clone
+    function convertInputsToSpansInClone(clonedDoc) {
+      const clonedSheet = clonedDoc.querySelector('.bill-sheet');
+      if (!clonedSheet) return;
+
+      clonedSheet.style.boxShadow = 'none';
+
+      // Bill No
+      const origBillNo = document.getElementById('billNoInput');
+      const cloneBillNo = clonedDoc.getElementById('billNoInput');
+      if (origBillNo && cloneBillNo) {
+        const s = clonedDoc.createElement('span');
+        s.style.fontWeight = '800';
+        s.style.color = '#111827';
+        s.style.fontSize = '14px';
+        s.textContent = origBillNo.value;
+        cloneBillNo.parentNode.replaceChild(s, cloneBillNo);
+      }
+
+      // Date
+      const origDate = document.getElementById('dateInput');
+      const cloneDate = clonedDoc.getElementById('dateInput');
+      if (origDate && cloneDate) {
+        const s = clonedDoc.createElement('span');
+        s.style.fontWeight = '700';
+        s.style.color = '#111827';
+        s.textContent = origDate.value;
+        cloneDate.parentNode.replaceChild(s, cloneDate);
+      }
+
+      // Customer
+      const origCust = document.getElementById('custNameInput');
+      const cloneCust = clonedDoc.getElementById('custNameInput');
+      if (origCust && cloneCust) {
+        const s = clonedDoc.createElement('span');
+        s.style.fontWeight = '700';
+        s.style.color = '#111827';
+        s.textContent = origCust.value.trim() || '';
+        cloneCust.parentNode.replaceChild(s, cloneCust);
+      }
+
+      // Items
+      const origRows = document.querySelectorAll('#itemsBody tr');
+      const cloneRows = clonedDoc.querySelectorAll('#itemsBody tr');
+      origRows.forEach((origTr, idx) => {
+        const cloneTr = cloneRows[idx];
+        if (!cloneTr) return;
+
+        const origSize = origTr.querySelector('.size-input');
+        const cloneSize = cloneTr.querySelector('.size-input');
+        if (origSize && cloneSize) {
+          const s = clonedDoc.createElement('span');
+          s.style.fontWeight = '700';
+          s.style.color = '#111827';
+          s.style.display = 'inline-block';
+          s.style.minWidth = '35px';
+          s.textContent = origSize.value;
+          cloneSize.parentNode.replaceChild(s, cloneSize);
+        }
+
+        const origDesc = origTr.querySelector('.desc-input');
+        const cloneDesc = cloneTr.querySelector('.desc-input');
+        if (origDesc && cloneDesc) {
+          const s = clonedDoc.createElement('span');
+          s.style.fontWeight = '600';
+          s.style.color = '#111827';
+          s.textContent = origDesc.value;
+          cloneDesc.parentNode.replaceChild(s, cloneDesc);
+        }
+
+        const origPcs = origTr.querySelector('.pcs-input');
+        const clonePcs = cloneTr.querySelector('.pcs-input');
+        if (origPcs && clonePcs) {
+          const s = clonedDoc.createElement('span');
+          s.style.fontWeight = '700';
+          s.style.color = '#111827';
+          s.style.display = 'block';
+          s.style.textAlign = 'center';
+          s.textContent = origPcs.value || '0';
+          clonePcs.parentNode.replaceChild(s, clonePcs);
+        }
+
+        const origRate = origTr.querySelector('.rate-input');
+        const cloneRate = cloneTr.querySelector('.rate-input');
+        if (origRate && cloneRate) {
+          const s = clonedDoc.createElement('span');
+          s.style.fontWeight = '700';
+          s.style.color = '#111827';
+          s.style.display = 'block';
+          s.style.textAlign = 'right';
+          const num = parseFloat(origRate.value) || 0;
+          s.textContent = num.toFixed(2);
+          cloneRate.parentNode.replaceChild(s, cloneRate);
         }
       });
 
-      const sign = document.getElementById('adjSign').value;
-      const adjVal = Math.abs(parseFloat(document.getElementById('adjAmountInput').value) || 0);
-      const adjLabel = document.getElementById('adjLabel').value.trim() || 'Advance / Adj';
-      if (adjVal > 0) {
-        msg += `--------------------------------\n`;
-        msg += `${adjLabel}: ${sign}₹${adjVal.toFixed(2)}\n`;
+      // Adjustment
+      const origSign = document.getElementById('adjSign');
+      const origLabel = document.getElementById('adjLabel');
+      const cloneAdjControls = clonedDoc.querySelector('.adj-controls');
+      if (cloneAdjControls && origSign && origLabel) {
+        const s = clonedDoc.createElement('span');
+        s.style.fontWeight = '800';
+        s.style.color = '#b91c1c';
+        s.textContent = `${origSign.value} ${origLabel.value.trim() || 'Advance / Other'}`;
+        cloneAdjControls.parentNode.replaceChild(s, cloneAdjControls);
       }
 
-      const total = document.getElementById('grandTotalDisplay').textContent;
-      msg += `--------------------------------\n`;
-      msg += `💰 *GRAND TOTAL: ₹${total}*\n`;
-      msg += `--------------------------------\n`;
-      msg += `📍 *No. 67/1, Bharathiyar Street, Govarthanagiri, Avadi, Chennai - 71*\n`;
-      msg += `📞 *Cell:* 9941595850 | 6382132040 | 8838135069\n`;
-      msg += `🌐 murugesan-well-rings.vercel.app`;
+      const cloneAdjInput = clonedDoc.getElementById('adjAmountInput');
+      if (cloneAdjInput) {
+        cloneAdjInput.style.display = 'none';
+      }
 
-      const encoded = encodeURIComponent(msg);
-      window.open(`https://wa.me/?text=${encoded}`, '_blank');
+      // Signature
+      const origSig = document.querySelector('.sig-input');
+      const cloneSig = clonedDoc.querySelector('.sig-input');
+      if (origSig && cloneSig) {
+        const s = clonedDoc.createElement('span');
+        s.style.fontFamily = "'Allura', cursive";
+        s.style.fontSize = '28px';
+        s.style.lineHeight = '1.1';
+        s.style.color = '#111827';
+        s.style.display = 'inline-block';
+        s.textContent = origSig.value || 'G. Murugesan';
+        cloneSig.parentNode.replaceChild(s, cloneSig);
+      }
+    }
+
+    // Modal Helpers
+    function openImageShareModal(dataUrl, fileName, waUrl, copied) {
+      const modal = document.getElementById('imageShareModal');
+      const img = document.getElementById('modalPreviewImg');
+      const waBtn = document.getElementById('modalWaBtn');
+      const dlBtn = document.getElementById('modalDownloadBtn');
+      const alertBox = document.getElementById('modalClipboardAlert');
+
+      if (img) img.src = dataUrl;
+      if (waBtn) waBtn.href = waUrl;
+      if (dlBtn) {
+        dlBtn.href = dataUrl;
+        dlBtn.download = fileName;
+      }
+      if (alertBox) {
+        alertBox.style.display = copied ? 'flex' : 'none';
+      }
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeImageShareModal() {
+      const modal = document.getElementById('imageShareModal');
+      if (modal) modal.classList.add('hidden');
     }
 
     // Initialize
